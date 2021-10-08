@@ -1,15 +1,13 @@
-name: argocd
+name: gitea
 type: terraform
-description: Module to install ArgoCD into a cluster via an operator
+description: Module to install Gitea into a cluster via an operator
 tags:
     - tools
     - devops
     - gitops
-    - argocd
+    - gitea
 versions:
 - platforms:
-    - kubernetes
-    - ocp3
     - ocp4
   dependencies:
     - id: cluster
@@ -37,10 +35,6 @@ versions:
       moduleRef:
         id: cluster
         output: platform.type_code
-    - name: ingress_subdomain
-      moduleRef:
-        id: cluster
-        output: platform.ingress
     - name: cluster_config_file
       moduleRef:
         id: cluster
@@ -53,8 +47,12 @@ versions:
       moduleRef:
         id: olm
         output: target_namespace
-    - name: app_namespace
+    - name: instance_namespace
       moduleRef:
         id: namespace
+        output: instance_namespace
+    - name: name
+      moduleRef:
+        id: name
         output: name
         discriminator: tools

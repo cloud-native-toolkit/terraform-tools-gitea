@@ -1,51 +1,47 @@
 
 locals {
-  tmp_dir           = "${path.cwd}/.tmp"
-  version_file      = "${local.tmp_dir}/argocd-cluster.version"
-  cluster_version   = data.local_file.cluster_version.content
-  version_re        = substr(local.cluster_version, 0, 1) == "4" ? regex("^4.([0-9]+)", local.cluster_version)[0] : ""
-  name              = local.version_re == "6" ? "argocd-cluster" : "openshift-gitops"
-  openshift_gitops  = local.version_re == "6" || local.version_re == "7" || local.version_re == "8" || local.version_re == "9"
-  app_namespace     = local.openshift_gitops ? "openshift-gitops" : var.app_namespace
-  host              = "${local.name}-server-${local.app_namespace}.${var.ingress_subdomain}"
-  grpc_host         = "${local.name}-server-grpc-${local.app_namespace}.${var.ingress_subdomain}"
-  url_endpoint      = "https://${local.host}"
-  grpc_url_endpoint = "https://${local.grpc_host}"
-  password_file     = "${local.tmp_dir}/argocd-password.val"
-  tls_secret_name   = regex("([^.]+).*", var.ingress_subdomain)[0]
-  argocd_values       = {
+  tmp_dir            = "${path.cwd}/.tmp"
+  version_file       = "${local.tmp_dir}/gitea-cluster.version"
+  cluster_version    = data.local_file.cluster_version.content
+  version_re         = substr(local.cluster_version, 0, 1) == "4" ? regex("^4.([0-9]+)", local.cluster_version)[0] : ""
+  openshift_gitops   = local.version_re == "6" || local.version_re == "7" || local.version_re == "8" || local.version_re == "9"
+  password_file      = "${local.tmp_dir}/gitea-password.val"
+  gitea_username     = var.gitea_username
+  gitea_password     = var.gitea_password
+  instance_namespace = var.instance_namespace 
+
+  gitea_operator_values       = {
     global = {
-      ingressSubdomain = var.ingress_subdomain
-      tlsSecretName = local.tls_secret_name
+      clusterType = var.cluster_type
+      olmNamespace = var.olm_namespace
+      operatorNamespace = var.operator_namespace
+    }
+
+    ocpCatalog = {
+      source = "redhat-gpte-gitea"
+      channel = "stable"
+      name = "gitea-operator"
+    }
+  }
+  gitea_operator_values_file = "${local.tmp_dir}/values-gitea-operator.yaml"
+
+
+  gitea_instance_values = {
+    global = {
       clusterType = var.cluster_type
     }
-    openshift-gitops = {
-      enabled = local.openshift_gitops
-      createInstance = false
-      subscription = {
-        channel = local.version_re == "6" ? "preview" : "stable"
-      }
-    }
-    argocd-operator = {
-      enabled = !local.openshift_gitops
-      controllerRbac = true
+    giteaInstance = {
+      name = "gitea-tools"
+      namespace = "tools"
+      giteaAdminUser = local.gitea_username
+      giteaAdminPassword = local.gitea_password
+      giteaAdminPasswordLength = "6"
+      giteaAdminEmail = "admin@email.com"
     }
   }
-  argocd_values_file = "${local.tmp_dir}/values-argocd.yaml"
-  argocd_config_values = {
-    name = "ArgoCD"
-    url = local.url_endpoint
-    otherConfig = {
-      grpc_url = var.cluster_type == "kubernetes" ? local.grpc_url_endpoint : ""
-    }
-    username = "admin"
-    password = data.local_file.argocd_password.content
-    applicationMenu = var.cluster_type == "ocp4" && tonumber(local.version_re) < 7
-    ingressSubdomain = var.ingress_subdomain
-  }
-  argocd_config_values_file = "${local.tmp_dir}/values-argocd-config.yaml"
-  service_account_name = "${local.name}-argocd-application-controller"
+  gitea_instance_values_file = "${local.tmp_dir}/values-gitea-instance.yaml"
 }
+
 
 resource null_resource cluster_version {
   provisioner "local-exec" {
@@ -73,32 +69,34 @@ resource null_resource print_version {
   }
 }
 
-resource null_resource delete_argocd_helm {
-  provisioner "local-exec" {
-    command = "kubectl delete job job-argocd -n ${local.app_namespace} || exit 0"
+# resource null_resource delete_argocd_helm {
+#   provisioner "local-exec" {
+#     command = "kubectl delete job job-argocd -n ${local.app_namespace} || exit 0"
 
-    environment = {
-      KUBECONFIG = var.cluster_config_file
-    }
-  }
+#     environment = {
+#       KUBECONFIG = var.cluster_config_file
+#     }
+#   }
 
-  provisioner "local-exec" {
-    command = "kubectl delete job job-openshift-gitops-operator -n openshift-operators || exit 0"
+#   provisioner "local-exec" {
+#     command = "kubectl delete job job-openshift-gitops-operator -n openshift-operators || exit 0"
 
-    environment = {
-      KUBECONFIG = var.cluster_config_file
-    }
-  }
-}
+#     environment = {
+#       KUBECONFIG = var.cluster_config_file
+#     }
+#   }
+# }
 
-resource null_resource argocd_helm {
-  depends_on = [null_resource.delete_argocd_helm]
+resource null_resource gitea_operator_helm {
+  # depends_on = [null_resource.delete_argocd_helm]
 
   triggers = {
-    namespace = var.app_namespace
-    name = "argocd"
-    chart = "${path.module}/charts/argocd"
-    values_file_content = yamlencode(local.argocd_values)
+    namespace = var.operator_namespace
+    name = "gitea_operator"
+    # chart = "${path.module}/charts/gitea_operator"
+    chart = "gitea-operator"
+    repository = "https://charts.cloudnativetoolkit.dev"
+    values_file_content = yamlencode(local.gitea_operator_values)
     kubeconfig = var.cluster_config_file
     tmp_dir = local.tmp_dir
   }
@@ -126,15 +124,15 @@ resource null_resource argocd_helm {
   }
 }
 
-resource null_resource get_argocd_password {
-  depends_on = [null_resource.argocd_helm]
+resource null_resource get_gitea_password {
+  depends_on = [null_resource.gitea_operator_helm]
 
   triggers = {
     always_run = timestamp()
   }
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/get-argocd-password.sh ${local.app_namespace} ${local.password_file} ${local.version_re}"
+    command = "${path.module}/scripts/get-gitea-password.sh ${local.instance_namespace} ${local.password_file} ${local.version_re}"
 
     environment = {
       KUBECONFIG = var.cluster_config_file
@@ -142,39 +140,40 @@ resource null_resource get_argocd_password {
   }
 }
 
-data local_file argocd_password {
-  depends_on = [null_resource.get_argocd_password]
+data local_file gitea_password {
+  depends_on = [null_resource.get_gitea_password]
 
   filename = local.password_file
 }
 
-resource "null_resource" "delete_argocd_config_helm" {
-  provisioner "local-exec" {
-    command = "kubectl api-resources | grep -q consolelink && kubectl delete consolelink -l grouping=garage-cloud-native-toolkit -l app=argocd || exit 0"
+# resource "null_resource" "delete_argocd_config_helm" {
+#   provisioner "local-exec" {
+#     command = "kubectl api-resources | grep -q consolelink && kubectl delete consolelink -l grouping=garage-cloud-native-toolkit -l app=argocd || exit 0"
 
-    environment = {
-      KUBECONFIG = var.cluster_config_file
-    }
-  }
+#     environment = {
+#       KUBECONFIG = var.cluster_config_file
+#     }
+#   }
 
-  provisioner "local-exec" {
-    command = "kubectl delete -n ${var.app_namespace} secret sh.helm.release.v1.argocd-config.v1 || exit 0"
+#   provisioner "local-exec" {
+#     command = "kubectl delete -n ${var.app_namespace} secret sh.helm.release.v1.argocd-config.v1 || exit 0"
 
-    environment = {
-      KUBECONFIG = var.cluster_config_file
-    }
-  }
-}
+#     environment = {
+#       KUBECONFIG = var.cluster_config_file
+#     }
+#   }
+# }
 
-resource null_resource argocd-config {
-  depends_on = [null_resource.delete_argocd_config_helm]
-
+resource null_resource gitea_instance_helm {
+  # depends_on = [null_resource.delete_argocd_config_helm]
+  depends_on = [null_resource.gitea_operator_helm]
+  
   triggers = {
-    namespace = var.app_namespace
-    name = "argocd-config"
-    chart = "tool-config"
+    namespace = local.instance_namespace
+    name = var.name
+    chart = "gitea-instance"
     repository = "https://charts.cloudnativetoolkit.dev"
-    values_file_content = yamlencode(local.argocd_config_values)
+    values_file_content = yamlencode(local.gitea_instance_values)
     kubeconfig = var.cluster_config_file
     tmp_dir = local.tmp_dir
   }
@@ -204,56 +203,3 @@ resource null_resource argocd-config {
   }
 }
 
-//resource "null_resource" "delete-solsa-helm" {
-//  provisioner "local-exec" {
-//    command = "kubectl delete -n ${local.app_namespace} secret sh.helm.release.v1.solsa.v1 || exit 0"
-//
-//    environment = {
-//      KUBECONFIG = var.cluster_config_file
-//    }
-//  }
-//}
-//
-//resource "helm_release" "solsa" {
-//  depends_on = [null_resource.argocd-instance, null_resource.delete-solsa-helm]
-//
-//  name         = "solsa"
-//  chart        = "${path.module}/charts/solsa-cm"
-//  namespace    = local.app_namespace
-//  force_update = true
-//
-//  set {
-//    name  = "ingress.subdomain"
-//    value = var.ingress_subdomain
-//  }
-//
-//  set {
-//    name  = "ingress.tlssecret"
-//    value = local.tls_secret_name
-//  }
-//}
-//
-//resource "null_resource" "install-solsa-plugin" {
-//  depends_on = [helm_release.solsa]
-//
-//  provisioner "local-exec" {
-//    command = "${path.module}/scripts/patch-solsa.sh ${local.app_namespace} ${local.name}"
-//
-//    environment = {
-//      KUBECONFIG = var.cluster_config_file
-//    }
-//  }
-//}
-//
-//resource "null_resource" "install-key-protect-plugin" {
-//  depends_on = [null_resource.argocd-instance, null_resource.install-solsa-plugin]
-//
-//  provisioner "local-exec" {
-//    command = "${path.module}/scripts/install-key-protect-plugin.sh ${local.app_namespace} ${local.name}"
-//
-//    environment = {
-//      KUBECONFIG = var.cluster_config_file
-//      TMP_DIR    = local.tmp_dir
-//    }
-//  }
-//}
