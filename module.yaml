@@ -56,3 +56,5 @@ versions:
         id: name
         output: name
         discriminator: tools
+    - name: gitea_username
+    - name: gitea_password

@@ -1,3 +1,29 @@
 .idea/
 .tmp/
 *.iml
+
+.bash_history
+.terraform.d/
+.viminfo
+
+# Local .kube directories
+**/.kube/*
+
+# Local .helm directories
+**/.helm/*
+bin/
+
+# Local .terraform directories
+**/.terraform/*
+
+# Terraform files
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.temp/
+/workspace
+dist/

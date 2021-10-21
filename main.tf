@@ -7,7 +7,7 @@ locals {
   openshift_gitops   = local.version_re == "6" || local.version_re == "7" || local.version_re == "8" || local.version_re == "9"
   password_file      = "${local.tmp_dir}/gitea-password.val"
   gitea_username     = var.gitea_username
-  gitea_password     = var.gitea_password
+  gitea_password     = var.gitea_password == "" ? random_password.password.result : var.gitea_password
   instance_namespace = var.instance_namespace 
 
   gitea_operator_values       = {
@@ -34,12 +34,16 @@ locals {
       name = "gitea-tools"
       namespace = "tools"
       giteaAdminUser = local.gitea_username
-      giteaAdminPassword = local.gitea_password
-      giteaAdminPasswordLength = "6"
-      giteaAdminEmail = "admin@email.com"
+      giteaAdminPassword = "${local.gitea_password}"
     }
   }
   gitea_instance_values_file = "${local.tmp_dir}/values-gitea-instance.yaml"
+}
+
+resource "random_password" "password" {
+  length           = 16
+  special          = true
+  override_special = "()$#-=_"
 }
 
 
@@ -69,31 +73,11 @@ resource null_resource print_version {
   }
 }
 
-# resource null_resource delete_argocd_helm {
-#   provisioner "local-exec" {
-#     command = "kubectl delete job job-argocd -n ${local.app_namespace} || exit 0"
-
-#     environment = {
-#       KUBECONFIG = var.cluster_config_file
-#     }
-#   }
-
-#   provisioner "local-exec" {
-#     command = "kubectl delete job job-openshift-gitops-operator -n openshift-operators || exit 0"
-
-#     environment = {
-#       KUBECONFIG = var.cluster_config_file
-#     }
-#   }
-# }
-
 resource null_resource gitea_operator_helm {
-  # depends_on = [null_resource.delete_argocd_helm]
 
   triggers = {
     namespace = var.operator_namespace
-    name = "gitea_operator"
-    # chart = "${path.module}/charts/gitea_operator"
+    name = "gitea-operator"
     chart = "gitea-operator"
     repository = "https://charts.cloudnativetoolkit.dev"
     values_file_content = yamlencode(local.gitea_operator_values)
@@ -106,6 +90,7 @@ resource null_resource gitea_operator_helm {
 
     environment = {
       KUBECONFIG = self.triggers.kubeconfig
+      REPO = self.triggers.repository
       VALUES_FILE_CONTENT = self.triggers.values_file_content
       TMP_DIR = self.triggers.tmp_dir
     }
@@ -124,49 +109,30 @@ resource null_resource gitea_operator_helm {
   }
 }
 
-resource null_resource get_gitea_password {
+resource null_resource wait_gitea_operator_deployment {
   depends_on = [null_resource.gitea_operator_helm]
 
   triggers = {
-    always_run = timestamp()
+    namespace = var.operator_namespace
+    name = "gitea-operator"
+    kubeconfig = var.cluster_config_file
+    tmp_dir = local.tmp_dir
+    openshift = local.openshift_gitops
   }
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/get-gitea-password.sh ${local.instance_namespace} ${local.password_file} ${local.version_re}"
+    command = "${path.module}/scripts/wait-for-deployments.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.openshift}"
 
     environment = {
-      KUBECONFIG = var.cluster_config_file
+      KUBECONFIG = self.triggers.kubeconfig
+      TMP_DIR = self.triggers.tmp_dir
     }
   }
+
 }
-
-data local_file gitea_password {
-  depends_on = [null_resource.get_gitea_password]
-
-  filename = local.password_file
-}
-
-# resource "null_resource" "delete_argocd_config_helm" {
-#   provisioner "local-exec" {
-#     command = "kubectl api-resources | grep -q consolelink && kubectl delete consolelink -l grouping=garage-cloud-native-toolkit -l app=argocd || exit 0"
-
-#     environment = {
-#       KUBECONFIG = var.cluster_config_file
-#     }
-#   }
-
-#   provisioner "local-exec" {
-#     command = "kubectl delete -n ${var.app_namespace} secret sh.helm.release.v1.argocd-config.v1 || exit 0"
-
-#     environment = {
-#       KUBECONFIG = var.cluster_config_file
-#     }
-#   }
-# }
 
 resource null_resource gitea_instance_helm {
-  # depends_on = [null_resource.delete_argocd_config_helm]
-  depends_on = [null_resource.gitea_operator_helm]
+  depends_on = [null_resource.wait_gitea_operator_deployment]
   
   triggers = {
     namespace = local.instance_namespace
@@ -203,3 +169,24 @@ resource null_resource gitea_instance_helm {
   }
 }
 
+resource null_resource wait_gitea_instance_deployment {
+  depends_on = [null_resource.gitea_instance_helm]
+
+  triggers = {
+    namespace = local.instance_namespace
+    name = "gitea-tools"
+    kubeconfig = var.cluster_config_file
+    tmp_dir = local.tmp_dir
+    openshift = local.openshift_gitops
+  }
+
+  provisioner "local-exec" {
+    command = "${path.module}/scripts/wait-for-pods-routes.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.openshift}"
+
+    environment = {
+      KUBECONFIG = self.triggers.kubeconfig
+      TMP_DIR = self.triggers.tmp_dir
+    }
+  }
+
+}

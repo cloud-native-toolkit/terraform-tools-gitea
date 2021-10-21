@@ -6,7 +6,7 @@ variable "cluster_config_file" {
 variable "cluster_type" {
   type        = string
   description = "The type of cluster (openshift or kubernetes)"
-  default     = "openshift"
+  default     = "ocp4"
 }
 
 variable "olm_namespace" {
@@ -36,11 +36,10 @@ variable "name" {
 variable "gitea_username" {
   type        = string
   description = "The username for the instance"
-  default     = "toolkit"
+  default     = "gitea-admin"
 }
 
 variable "gitea_password" {
   type        = string
   description = "The password for the instance"
-  default     = "toolkit"
 }
