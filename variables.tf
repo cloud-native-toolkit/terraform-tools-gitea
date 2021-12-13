@@ -27,10 +27,10 @@ variable "instance_namespace" {
   default     = "tools"
 }
 
-variable "name" {
+variable "instance_name" {
   type        = string
   description = "The name for the instance"
-  default     = "gitea-tools"
+  default     = "gitea"
 }
 
 variable "gitea_username" {

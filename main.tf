@@ -9,6 +9,7 @@ locals {
   gitea_username     = var.gitea_username
   gitea_password     = var.gitea_password == "" ? random_password.password.result : var.gitea_password
   instance_namespace = var.instance_namespace 
+  instance_name      = var.instance_name
 
   gitea_operator_values       = {
     global = {
@@ -31,8 +32,8 @@ locals {
       clusterType = var.cluster_type
     }
     giteaInstance = {
-      name = "gitea-tools"
-      namespace = "tools"
+      name = local.instance_name
+      namespace = local.instance_namespace
       giteaAdminUser = local.gitea_username
       giteaAdminPassword = "${local.gitea_password}"
     }
@@ -136,7 +137,7 @@ resource null_resource gitea_instance_helm {
   
   triggers = {
     namespace = local.instance_namespace
-    name = var.name
+    name = local.instance_name
     chart = "gitea-instance"
     repository = "https://charts.cloudnativetoolkit.dev"
     values_file_content = yamlencode(local.gitea_instance_values)
@@ -174,7 +175,7 @@ resource null_resource wait_gitea_instance_deployment {
 
   triggers = {
     namespace = local.instance_namespace
-    name = "gitea-tools"
+    name = local.instance_name
     kubeconfig = var.cluster_config_file
     tmp_dir = local.tmp_dir
     openshift = local.openshift_gitops
