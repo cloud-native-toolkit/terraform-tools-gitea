@@ -3,6 +3,13 @@
 NAMESPACE="$1"
 NAME="$2"
 CHART="$3"
+OPENSHIFT="$4"
+
+# Don't run if on kubernetes
+if [ ${OPENSHIFT} != true ]; then
+  echo "Skip, not installing into Openshift"
+  exit 0 
+fi
 
 if [[ -z "${TMP_DIR}" ]]; then
   TMP_DIR="./tmp"
