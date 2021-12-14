@@ -19,7 +19,7 @@ for POD in ${PODS}; do
   count=0
   until [ $(kubectl get pods -l "${POD}" -n "${NAMESPACE}" 2> /dev/null | wc -l) -gt 0 ];
   do
-    if [[ ${count} -eq 24 ]]; then
+    if [[ ${count} -eq 50 ]]; then
       echo "Timed out waiting for pod -l ${POD} in ${NAMESPACE} to be created"
       kubectl get pods -l "${POD}" -n "${NAMESPACE}" 
       exit 1
@@ -33,7 +33,7 @@ for POD in ${PODS}; do
 
   until kubectl get pods -l "${POD}" -n "${NAMESPACE}" -o jsonpath="{.items[0]['status.phase']}" | grep -q Running;
   do
-    if [[ ${count} -eq 24 ]]; then
+    if [[ ${count} -eq 50 ]]; then
       echo "Timed out waiting for pod -l ${POD} in ${NAMESPACE} to be running"
       kubectl get pods -l "${POD}"  -n "${NAMESPACE}" 
       exit 1
@@ -52,7 +52,7 @@ for ROUTE in ${ROUTES}; do
   count=0
   until kubectl get route "${ROUTE}" -n "${NAMESPACE}" 1> /dev/null 2> /dev/null ;
   do
-    if [[ ${count} -eq 30 ]]; then
+    if [[ ${count} -eq 50 ]]; then
       echo "Timed out waiting for route/${ROUTE} in ${NAMESPACE} to be created"
       kubectl get route "${ROUTE}" -n "${NAMESPACE}" 
       exit 1

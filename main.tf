@@ -9,6 +9,7 @@ locals {
   openshift          = var.cluster_type != "kubernetes"
   gitea_username     = var.gitea_username
   gitea_password     = var.gitea_password == "" ? random_password.password.result : var.gitea_password
+  gitea_email        = "${local.gitea_username}@cloudnativetoolkit.dev"
   instance_namespace = var.instance_namespace
   instance_name      = var.instance_name
   git_protocol       = "https"
@@ -39,6 +40,7 @@ locals {
       namespace          = local.instance_namespace
       giteaAdminUser     = local.gitea_username
       giteaAdminPassword = "${local.gitea_password}"
+      giteaAdminEmail    = "${local.gitea_email}"
     }
   }
   gitea_instance_values_file = "${local.tmp_dir}/values-gitea-instance.yaml"
