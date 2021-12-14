@@ -10,6 +10,8 @@ locals {
   gitea_password     = var.gitea_password == "" ? random_password.password.result : var.gitea_password
   instance_namespace = var.instance_namespace
   instance_name      = var.instance_name
+  git_protocol       = "https"
+  git_name           = "Gitea"
 
   gitea_operator_values = {
     global = {
@@ -195,19 +197,23 @@ resource "null_resource" "gitea_consolelink_deployment" {
   depends_on = [null_resource.wait_gitea_instance_deployment]
 
   triggers = {
-    namespace  = local.instance_namespace
-    name       = local.instance_name
-    kubeconfig = var.cluster_config_file
-    tmp_dir    = local.tmp_dir
-    openshift  = local.openshift_gitops
+    namespace    = local.instance_namespace
+    name         = local.instance_name
+    kubeconfig   = var.cluster_config_file
+    tmp_dir      = local.tmp_dir
+    openshift    = local.openshift_gitops
+    git_protocal = local.git_protocol
+    git_name     = local.git_name
   }
 
   provisioner "local-exec" {
     command = "${path.module}/scripts/create-console-link.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.openshift}"
 
     environment = {
-      KUBECONFIG = self.triggers.kubeconfig
-      TMP_DIR    = self.triggers.tmp_dir
+      KUBECONFIG   = self.triggers.kubeconfig
+      TMP_DIR      = self.triggers.tmp_dir
+      GIT_PROTOCOL = self.triggers.git_protocol
+      GIT_NAME     = self.triggers.git_name
     }
   }
 }

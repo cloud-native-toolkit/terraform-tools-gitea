@@ -13,7 +13,7 @@ fi
 GIT_PROTOCOL=${GIT_PROTOCOL:-https}
 GIT_HOST=$(oc get route ${NAME} -n ${NAMESPACE} -o jsonpath='{.spec.host}')
 GIT_URL="${GIT_PROTOCOL}://${GIT_HOST}"
-GIT_NAME="Gitea"
+GIT_NAME==${GIT_PROTOCOL:-Gitea}
 
 oc apply -f - <<EOF
 apiVersion: console.openshift.io/v1
