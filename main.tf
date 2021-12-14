@@ -6,6 +6,7 @@ locals {
   version_re         = substr(local.cluster_version, 0, 1) == "4" ? regex("^4.([0-9]+)", local.cluster_version)[0] : ""
   openshift_gitops   = local.version_re == "6" || local.version_re == "7" || local.version_re == "8" || local.version_re == "9"
   password_file      = "${local.tmp_dir}/gitea-password.val"
+  openshift          = var.cluster_type != "kubernetes"
   gitea_username     = var.gitea_username
   gitea_password     = var.gitea_password == "" ? random_password.password.result : var.gitea_password
   instance_namespace = var.instance_namespace
@@ -86,10 +87,11 @@ resource "null_resource" "gitea_operator_helm" {
     values_file_content = yamlencode(local.gitea_operator_values)
     kubeconfig          = var.cluster_config_file
     tmp_dir             = local.tmp_dir
+    openshift           = local.openshift
   }
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/deploy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart}"
+    command = "${path.module}/scripts/deploy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart} ${self.triggers.openshift}"
 
     environment = {
       KUBECONFIG          = self.triggers.kubeconfig
@@ -106,6 +108,7 @@ resource "null_resource" "gitea_operator_helm" {
 
     environment = {
       KUBECONFIG          = self.triggers.kubeconfig
+      REPO                = self.triggers.repository
       VALUES_FILE_CONTENT = self.triggers.values_file_content
       TMP_DIR             = self.triggers.tmp_dir
     }
@@ -120,7 +123,7 @@ resource "null_resource" "wait_gitea_operator_deployment" {
     name       = "gitea-operator"
     kubeconfig = var.cluster_config_file
     tmp_dir    = local.tmp_dir
-    openshift  = local.openshift_gitops
+    openshift  = local.openshift
   }
 
   provisioner "local-exec" {
@@ -145,10 +148,11 @@ resource "null_resource" "gitea_instance_helm" {
     values_file_content = yamlencode(local.gitea_instance_values)
     kubeconfig          = var.cluster_config_file
     tmp_dir             = local.tmp_dir
+    openshift           = local.openshift
   }
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/deploy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart}"
+    command = "${path.module}/scripts/deploy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart} ${self.triggers.openshift}"
 
     environment = {
       KUBECONFIG          = self.triggers.kubeconfig
@@ -180,7 +184,7 @@ resource "null_resource" "wait_gitea_instance_deployment" {
     name       = local.instance_name
     kubeconfig = var.cluster_config_file
     tmp_dir    = local.tmp_dir
-    openshift  = local.openshift_gitops
+    openshift  = local.openshift
   }
 
   provisioner "local-exec" {
@@ -201,8 +205,8 @@ resource "null_resource" "gitea_consolelink_deployment" {
     name         = local.instance_name
     kubeconfig   = var.cluster_config_file
     tmp_dir      = local.tmp_dir
-    openshift    = local.openshift_gitops
-    git_protocal = local.git_protocol
+    openshift    = local.openshift
+    git_protocol = local.git_protocol
     git_name     = local.git_name
   }
 
