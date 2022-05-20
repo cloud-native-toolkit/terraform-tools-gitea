@@ -1,0 +1,98 @@
+id: github.com/cloud-native-toolkit/terraform-tools-gitea
+name: gitea
+type: terraform
+description: Module to install Gitea into a cluster via an operator
+tags:
+  - tools
+  - devops
+  - gitops
+  - gitea
+versions:
+  - platforms:
+      - ocp4
+    dependencies:
+      - id: cluster
+        refs:
+          - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
+            version: ">= 1.7.0"
+          - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
+            version: ">= 1.0.0"
+          - source: github.com/ibm-garage-cloud/terraform-ibm-iks-vpc
+            version: ">= 1.0.0"
+          - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
+            version: ">= 2.0.0"
+          - source: github.com/ibm-garage-cloud/terraform-ocp-login
+            version: ">= 1.0.0"
+      - id: olm
+        refs:
+          - source: github.com/ibm-garage-cloud/terraform-k8s-olm
+            version: ">= 1.2.2"
+      - id: namespace
+        refs:
+          - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
+            version: ">= 2.1.0"
+    variables:
+      - name: cluster_type
+        moduleRef:
+          id: cluster
+          output: platform.type_code
+        type: string
+        description: The type of cluster (openshift or kubernetes)
+        default: ocp4
+        optional: true
+      - name: cluster_config_file
+        moduleRef:
+          id: cluster
+          output: config_file_path
+        type: string
+        description: Cluster config file for Kubernetes cluster.
+      - name: olm_namespace
+        moduleRef:
+          id: olm
+          output: olm_namespace
+        type: string
+        description: Namespace where olm is installed
+        default: openshift-marketplace
+        optional: true
+      - name: operator_namespace
+        moduleRef:
+          id: olm
+          output: target_namespace
+        type: string
+        description: Namespace where operators will be installed
+        default: openshift-operators
+        optional: true
+      - name: instance_namespace
+        moduleRef:
+          id: namespace
+          output: instance_namespace
+        type: string
+        description: Namespace where instance will be installed
+        default: tools
+        optional: true
+      - name: name
+        moduleRef:
+          id: name
+          output: name
+          discriminator: tools
+      - name: gitea_username
+        type: string
+        description: The username for the instance
+        default: gitea-admin
+        optional: true
+      - name: gitea_password
+        type: string
+        description: The password for the instance
+      - name: instance_name
+        type: string
+        description: The name for the instance
+        default: gitea
+        optional: true
+    version: v0.1.0
+    outputs:
+      - name: namespace
+        description: The namespace where the Gitea instance has been provisioned
+      - name: username
+        description: The username of the Gitea admin user
+      - name: password
+        description: The password of the Gitea admin user
