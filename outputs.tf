@@ -13,3 +13,13 @@ output "password" {
   value       = local.gitea_password
   sensitive   = true
 }
+
+output "ingress_host" {
+  description = "The host name of the gitea server"
+  value       = data.external.gitea_route.result.host
+}
+
+output "ingress_url" {
+  description = "The url of the gitea server"
+  value       = "https://${data.external.gitea_route.result.host}"
+}

@@ -10,6 +10,10 @@ if [ ${OPENSHIFT} != true ]; then
   exit 0 
 fi
 
+if [[ -n "${BIN_DIR}" ]]; then
+  export PATH="${BIN_DIR}:${PATH}"
+fi
+
 GIT_PROTOCOL=${GIT_PROTOCOL:-https}
 GIT_HOST=$(oc get route ${NAME} -n ${NAMESPACE} -o jsonpath='{.spec.host}')
 GIT_URL="${GIT_PROTOCOL}://${GIT_HOST}"

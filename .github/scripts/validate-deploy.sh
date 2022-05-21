@@ -2,6 +2,9 @@
 
 SCRIPT_DIR=$(cd $(dirname "$0"); pwd -P)
 
+BIN_DIR=$(cat .bin_dir)
+export PATH="${BIN_DIR}:${PATH}"
+
 if [[ -f .kubeconfig ]]; then
   KUBECONFIG=$(cat .kubeconfig)
 else
@@ -16,21 +19,6 @@ ls -A
 
 TOOLS_NAMESPACE=$(cat .namespace)
 NAMESPACE=$(cat .argo-namespace)
-
-ARGO_HOST=$(cat .argo-host)
-ARGO_USERNAME=$(cat .argo-username)
-ARGO_PASSWORD=$(cat .argo-password)
-
-if [[ -z "${ARGO_HOST}" ]] || [[ -z "${ARGO_USERNAME}" ]] || [[ -z "${ARGO_PASSWORD}" ]]; then
-  echo "ARGO_HOST, ARGO_USERNAME or ARGO_PASSWORD not provided (${ARGO_HOST}, ${ARGO_USERNAME}, ${ARGO_PASSWORD})"
-  exit 1
-fi
-
-ARGOCD=$(command -v argocd || command -v ./argocd)
-
-if [[ -z "${NAME}" ]]; then
-  NAME=$(echo "${NAMESPACE}" | sed "s/tools-//")
-fi
 
 echo "Verifying resources in ${NAMESPACE} namespace for module ${NAME}"
 
@@ -74,8 +62,5 @@ if [[ -z "${ARGOCD}" ]]; then
   chmod +x ./argocd
   ARGOCD="$(pwd -P)/argocd"
 fi
-
-echo "Logging in to argocd: ${ARGO_HOST} ${ARGO_PASSWORD}"
-${ARGOCD} login "${ARGO_HOST}" --username "${ARGO_USERNAME}" --password "${ARGO_PASSWORD}" --insecure --grpc-web || exit 1
 
 exit 0

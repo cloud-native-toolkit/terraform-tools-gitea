@@ -11,17 +11,8 @@ versions:
     - ocp4
   dependencies:
     - id: cluster
-      refs:
-        - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-          version: ">= 1.7.0"
-        - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-          version: ">= 1.0.0"
-        - source: github.com/ibm-garage-cloud/terraform-ibm-iks-vpc
-          version: ">= 1.0.0"
-        - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-          version: ">= 2.0.0"
-        - source: github.com/ibm-garage-cloud/terraform-ocp-login
-          version: ">= 1.0.0"
+      refs: []
+      interface: github.com/cloud-native-toolkit/automation-modules#cluster
     - id: olm
       refs:
         - source: github.com/ibm-garage-cloud/terraform-k8s-olm
@@ -51,10 +42,3 @@ versions:
       moduleRef:
         id: namespace
         output: instance_namespace
-    - name: name
-      moduleRef:
-        id: name
-        output: name
-        discriminator: tools
-    - name: gitea_username
-    - name: gitea_password

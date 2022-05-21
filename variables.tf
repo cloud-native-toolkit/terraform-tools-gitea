@@ -33,13 +33,14 @@ variable "instance_name" {
   default     = "gitea"
 }
 
-variable "gitea_username" {
+variable "username" {
   type        = string
   description = "The username for the instance"
   default     = "gitea-admin"
 }
 
-variable "gitea_password" {
+variable "password" {
   type        = string
   description = "The password for the instance"
+  default     = ""
 }

@@ -10,6 +10,15 @@ if [ ${OPENSHIFT} != true ]; then
   exit 0 
 fi
 
+if [[ -n "${BIN_DIR}" ]]; then
+  export PATH="${BIN_DIR}:${PATH}"
+fi
+
+if ! command -v kubectl 1> /dev/null 2> /dev/null; then
+  echo "kubectl cli not found" >&2
+  exit 1
+fi
+
 PODS="name=postgresql-${NAME},app=${NAME}"
 ROUTES="${NAME}"
 IFS=","
