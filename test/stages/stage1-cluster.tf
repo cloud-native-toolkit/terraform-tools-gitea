@@ -4,7 +4,7 @@ module "dev_cluster" {
   server_url = var.server_url
   login_user = "apikey"
   login_password = var.ibmcloud_api_key
-  login_token = ""
+  login_token = var.login_token
   ingress_subdomain = var.ingress_subdomain
 }
 

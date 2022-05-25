@@ -14,6 +14,16 @@ output "password" {
   sensitive   = true
 }
 
+output "host" {
+  description = "The host name of the gitea server"
+  value       = data.external.gitea_route.result.host
+}
+
+output "org" {
+  description = "The host name of the gitea server"
+  value       = local.gitea_username
+}
+
 output "ingress_host" {
   description = "The host name of the gitea server"
   value       = data.external.gitea_route.result.host
