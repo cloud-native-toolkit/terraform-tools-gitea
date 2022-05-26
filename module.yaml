@@ -41,4 +41,4 @@ versions:
     - name: instance_namespace
       moduleRef:
         id: namespace
-        output: instance_namespace
+        output: name
