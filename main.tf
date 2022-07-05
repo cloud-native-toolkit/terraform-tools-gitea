@@ -209,6 +209,7 @@ resource "null_resource" "wait_gitea_instance_deployment" {
 }
 
 data external gitea_route {
+  depends_on = [null_resource.wait_gitea_instance_deployment]
   program = ["bash", "${path.module}/scripts/get-route-host.sh"]
 
   query = {
