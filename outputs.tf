@@ -10,7 +10,7 @@ output "username" {
 
 output "password" {
   description = "The password of the Gitea admin user"
-  value       = local.gitea_password
+  value       = data.external.gitea_route.result.password
   sensitive   = true
 }
 
