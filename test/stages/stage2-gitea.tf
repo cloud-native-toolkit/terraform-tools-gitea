@@ -23,4 +23,7 @@ resource "null_resource" "output_values" {
   provisioner "local-exec" {
     command = "echo -n '${module.gitea.password}' > .password"
   }
+  provisioner "local-exec" {
+    command = "echo -n '${module.gitea.token}' > .token"
+  }
 }

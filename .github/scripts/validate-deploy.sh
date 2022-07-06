@@ -55,4 +55,15 @@ if [[ "${CLUSTER_TYPE}" =~ ocp4 ]] && [[ -n "${CONSOLE_LINK_NAME}" ]]; then
   fi
 fi
 
+HOST=$(cat .host)
+USERNAME=$(cat .username)
+PASSWORD=$(cat .password)
+TOKEN=$(cat .token)
+
+echo "With password"
+curl -X GET -H "Content-Type: application/json" -u "${USERNAME}:${PASSWORD}" "https://${HOST}/api/v1/user/repos"
+
+echo "With token"
+curl -X GET -H "Content-Type: application/json" -H "Authorization: token ${TOKEN}" "https://${HOST}/api/v1/user/repos"
+
 exit 0

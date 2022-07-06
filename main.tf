@@ -7,7 +7,7 @@ locals {
   openshift_gitops   = local.version_re == "6" || local.version_re == "7" || local.version_re == "8" || local.version_re == "9"
   password_file      = "${local.tmp_dir}/gitea-password.val"
   openshift          = var.cluster_type != "kubernetes"
-  gitea_username     = var.username
+  gitea_username     = "gitea-admin"
   gitea_password     = var.password == "" ? random_password.password.result : var.password
   gitea_email        = "${local.gitea_username}@cloudnativetoolkit.dev"
   instance_namespace = var.instance_namespace
@@ -217,6 +217,39 @@ data external gitea_route {
     kube_config = var.cluster_config_file
     namespace   = local.instance_namespace
     name        = local.instance_name
+  }
+}
+
+resource random_string token_id {
+  upper = false
+  special = false
+
+  length = 6
+}
+
+resource null_resource token {
+  provisioner "local-exec" {
+    command = "${path.module}/scripts/generate-token.sh '${var.instance_namespace}' 'gitea-token' 'token-${random_string.token_id.result}' '${data.external.gitea_route.result.host}'"
+
+    environment = {
+      KUBECONFIG = var.cluster_config_file
+      TMP_DIR    = local.tmp_dir
+      BIN_DIR    = module.setup_clis.bin_dir
+      USERNAME   = local.gitea_username
+      PASSWORD   = data.external.gitea_route.result.password
+    }
+  }
+}
+
+data external token {
+  depends_on = [null_resource.token]
+  program = ["bash", "${path.module}/scripts/get-token.sh"]
+
+  query = {
+    bin_dir = module.setup_clis.bin_dir
+    kube_config = var.cluster_config_file
+    namespace = var.instance_namespace
+    name = "gitea-token"
   }
 }
 
