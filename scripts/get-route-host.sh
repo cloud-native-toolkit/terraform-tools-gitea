@@ -19,13 +19,19 @@ if ! command -v jq 1> /dev/null 2> /dev/null; then
   exit 1
 fi
 
-HOST=$(kubectl get route -n "${NAMESPACE}" "${NAME}" --output JSON | jq -r '.spec.host')
+count=0
+until kubectl get gitea -n "${NAMESPACE}" "${NAME}" 1> /dev/null 2> /dev/null && [[ $(kubectl get gitea -n "${NAMESPACE}" "${NAME}" -o json | jq -r '.spec.adminSetupComplete // false') == "true" ]] || [[ $count -eq 30 ]]; do
+  count=$((count + 1))
+  sleep 30
+done
 
-if [[ -z "${HOST}" ]]; then
-  echo "Unable to find host from route ${NAMESPACE}/${NAME}" >&2
-  kubectl get route -n "${NAMESPACE}" >&2
+if [[ $(kubectl get gitea -n "${NAMESPACE}" "${NAME}" -o json | jq -r '.spec.adminSetupComplete // false') != "true" ]]; then
+  echo "Timed out waiting for gitea admin setup to complete" >&2
   exit 1
 fi
+
+PASSWORD=$(kubectl get gitea -n "${NAMESPACE}" "${NAME}" -o json | jq -r '.status.adminPassword // empty')
+HOST=$(kubectl get gitea -n "${NAMESPACE}" "${NAME}" -o json | jq -r '.status.giteaHostname // empty')
 
 count=0
 until curl -X GET -Iqs --insecure "https://${HOST}" | grep -q -E "403|200" || \
@@ -39,7 +45,5 @@ if [[ "${count}" -eq 30 ]]; then
   echo "Timed out waiting for host to be ready: ${HOST}" >&2
   exit 1
 fi
-
-PASSWORD=$(kubectl get gitea -n "${NAMESPACE}" "${NAME}" -o json | jq -r '.status.adminPassword // empty')
 
 jq -n --arg HOST "${HOST}" --arg PASSWORD "${PASSWORD}" '{"host": $HOST, "password": $PASSWORD}'
