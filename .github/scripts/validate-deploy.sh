@@ -59,6 +59,6 @@ HOST=$(cat .host)
 USERNAME=$(cat .username)
 PASSWORD=$(cat .password)
 
-curl -X GET -H "Content-Type: application/json" "https://${USERNAME}:${PASSWORD}@${HOST}/api/v1/user"
+curl -X GET -H "Content-Type: application/json" "https://${USERNAME}:${PASSWORD}@${HOST}/api/v1/user/repos"
 
 exit 0
