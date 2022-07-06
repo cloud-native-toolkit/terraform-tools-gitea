@@ -56,11 +56,9 @@ if [[ "${CLUSTER_TYPE}" =~ ocp4 ]] && [[ -n "${CONSOLE_LINK_NAME}" ]]; then
   fi
 fi
 
-if [[ -z "${ARGOCD}" ]]; then
-  VERSION=$(curl --silent "https://api.github.com/repos/argoproj/argo-cd/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
-  curl -sSL -o ./argocd https://github.com/argoproj/argo-cd/releases/download/$VERSION/argocd-linux-amd64
-  chmod +x ./argocd
-  ARGOCD="$(pwd -P)/argocd"
-fi
+PASSWORD=$(cat .password)
+echo "Output value: ${PASSWORD}"
+
+kubectl get secret -n "${NAMESPACE}" gitea-access
 
 exit 0
