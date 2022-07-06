@@ -39,8 +39,8 @@ locals {
       name               = local.instance_name
       namespace          = local.instance_namespace
       giteaAdminUser     = local.gitea_username
-      giteaAdminPassword = "${local.gitea_password}"
-      giteaAdminEmail    = "${local.gitea_email}"
+      giteaAdminPassword = local.gitea_password
+      giteaAdminEmail    = local.gitea_email
     }
   }
   gitea_instance_values_file = "${local.tmp_dir}/values-gitea-instance.yaml"

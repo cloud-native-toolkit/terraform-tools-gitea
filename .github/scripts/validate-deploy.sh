@@ -17,8 +17,7 @@ CLUSTER_TYPE=$(cat ./terraform.tfvars | grep "cluster_type" | sed -E "s/.*=//g" 
 echo "listing directory contents"
 ls -A
 
-TOOLS_NAMESPACE=$(cat .namespace)
-NAMESPACE=$(cat .argo-namespace)
+NAMESPACE=$(cat .namespace)
 
 echo "Verifying resources in ${NAMESPACE} namespace for module ${NAME}"
 
@@ -54,13 +53,6 @@ if [[ "${CLUSTER_TYPE}" =~ ocp4 ]] && [[ -n "${CONSOLE_LINK_NAME}" ]]; then
     echo "   ConsoleLink not found"
     exit 1
   fi
-fi
-
-if [[ -z "${ARGOCD}" ]]; then
-  VERSION=$(curl --silent "https://api.github.com/repos/argoproj/argo-cd/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
-  curl -sSL -o ./argocd https://github.com/argoproj/argo-cd/releases/download/$VERSION/argocd-linux-amd64
-  chmod +x ./argocd
-  ARGOCD="$(pwd -P)/argocd"
 fi
 
 exit 0

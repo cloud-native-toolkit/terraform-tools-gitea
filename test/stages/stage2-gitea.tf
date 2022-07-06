@@ -9,21 +9,18 @@ module "gitea" {
 
 resource "null_resource" "output_values" {
   provisioner "local-exec" {
-    command = "echo -n '${module.dev_software_olm.target_namespace}' > .namespace"
+    command = "echo -n '${module.gitea.namespace}' > .namespace"
   }
   provisioner "local-exec" {
-    command = "echo -n '${module.gitea.namespace}' > .argo-namespace"
+    command = "echo -n '${module.gitea.ingress_host}' > .host"
   }
   provisioner "local-exec" {
-    command = "echo -n '${module.gitea.ingress_host}' > .argo-host"
+    command = "echo -n '${module.gitea.ingress_url}' > .url"
   }
   provisioner "local-exec" {
-    command = "echo -n '${module.gitea.ingress_url}' > .argo-url"
+    command = "echo -n '${module.gitea.username}' > .username"
   }
   provisioner "local-exec" {
-    command = "echo -n '${module.gitea.username}' > .argo-username"
-  }
-  provisioner "local-exec" {
-    command = "echo -n '${module.gitea.password}' > .argo-password"
+    command = "echo -n '${module.gitea.password}' > .password"
   }
 }

@@ -62,8 +62,8 @@ for ROUTE in ${ROUTES}; do
   until kubectl get route "${ROUTE}" -n "${NAMESPACE}" 1> /dev/null 2> /dev/null ;
   do
     if [[ ${count} -eq 50 ]]; then
-      echo "Timed out waiting for route/${ROUTE} in ${NAMESPACE} to be created"
-      kubectl get route "${ROUTE}" -n "${NAMESPACE}" 
+      echo "Timed out waiting for route/${ROUTE} in ${NAMESPACE} to be created" >&2
+      kubectl get route "${ROUTE}" -n "${NAMESPACE}" >&2
       exit 1
     else
       count=$((count + 1))

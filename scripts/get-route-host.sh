@@ -27,4 +27,17 @@ if [[ -z "${HOST}" ]]; then
   exit 1
 fi
 
+count=0
+until curl -X GET -Iqs --insecure "https://${HOST}" | grep -q -E "403|200" || \
+  [[ $count -eq 30 ]]
+do
+    sleep 15
+    count=$((count + 1))
+done
+
+if [[ "${count}" -eq 30 ]]; then
+  echo "Timed out waiting for host to be ready: ${HOST}" >&2
+  exit 1
+fi
+
 jq -n --arg HOST "${HOST}" '{"host": $HOST}'
