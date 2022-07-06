@@ -17,8 +17,7 @@ CLUSTER_TYPE=$(cat ./terraform.tfvars | grep "cluster_type" | sed -E "s/.*=//g" 
 echo "listing directory contents"
 ls -A
 
-TOOLS_NAMESPACE=$(cat .namespace)
-NAMESPACE=$(cat .argo-namespace)
+NAMESPACE=$(cat .namespace)
 
 echo "Verifying resources in ${NAMESPACE} namespace for module ${NAME}"
 
@@ -59,6 +58,6 @@ fi
 PASSWORD=$(cat .password)
 echo "Output value: ${PASSWORD}"
 
-kubectl get secret -n "${NAMESPACE}" gitea-access
+kubectl get secret -n "${NAMESPACE}" gitea-access -o yaml
 
 exit 0
