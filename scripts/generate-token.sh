@@ -2,7 +2,8 @@
 
 NAMESPACE="$1"
 NAME="$2"
-HOST="$3"
+TOKEN_NAME="$3"
+HOST="$4"
 
 if [[ -n "${BIN_DIR}" ]]; then
   export PATH="${BIN_DIR}:${PATH}"
@@ -17,7 +18,7 @@ if [[ -z "${PASSWORD}" ]]; then
   exit 1
 fi
 
-RESULT=$(curl -XPOST -H "Content-Type: application/json" -k -s -d '{"name":"default"}' -u "${USERNAME}:${PASSWORD}" "https://${HOST}/api/v1/users/${USERNAME}/tokens")
+RESULT=$(curl -XPOST -H "Content-Type: application/json" -k -s -d "{\"name\":\"${TOKEN_NAME}\"}" -u "${USERNAME}:${PASSWORD}" "https://${HOST}/api/v1/users/${USERNAME}/tokens")
 
 TOKEN=$(echo "${RESULT}" | jq -r '.sha1 // empty')
 

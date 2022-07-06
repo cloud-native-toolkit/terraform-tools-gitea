@@ -220,9 +220,16 @@ data external gitea_route {
   }
 }
 
+resource random_string token_id {
+  upper = false
+  special = false
+
+  length = 6
+}
+
 resource null_resource token {
   provisioner "local-exec" {
-    command = "${path.module}/scripts/generate-token.sh '${var.instance_namespace}' 'gitea-token' '${data.external.gitea_route.result.host}'"
+    command = "${path.module}/scripts/generate-token.sh '${var.instance_namespace}' 'gitea-token' 'token-${random_string.token_id.result}' '${data.external.gitea_route.result.host}'"
 
     environment = {
       KUBECONFIG = var.cluster_config_file
