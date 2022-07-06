@@ -55,9 +55,4 @@ if [[ "${CLUSTER_TYPE}" =~ ocp4 ]] && [[ -n "${CONSOLE_LINK_NAME}" ]]; then
   fi
 fi
 
-PASSWORD=$(cat .password)
-echo "Output value: ${PASSWORD}"
-
-kubectl get secret -n "${NAMESPACE}" gitea-access -o yaml
-
 exit 0
