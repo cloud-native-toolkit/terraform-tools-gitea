@@ -8,8 +8,12 @@ if [[ -n "${BIN_DIR}" ]]; then
   export PATH="${BIN_DIR}:${PATH}"
 fi
 
-if [[ -z "${USERNAME}" ]] || [[ -z "${PASSWORD}" ]]; then
-  echo "USERNAME and PASSWORD required as environment variables" >&2
+if [[ -z "${USERNAME}" ]]; then
+  echo "USERNAME required as environment variable" >&2
+  exit 1
+fi
+if [[ -z "${PASSWORD}" ]]; then
+  echo "PASSWORD required as environment variable" >&2
   exit 1
 fi
 
