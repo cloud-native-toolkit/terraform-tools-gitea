@@ -55,6 +55,10 @@ if [[ "${CLUSTER_TYPE}" =~ ocp4 ]] && [[ -n "${CONSOLE_LINK_NAME}" ]]; then
   fi
 fi
 
-sleep 600
+HOST=$(cat .host)
+USERNAME=$(cat .username)
+PASSWORD=$(cat .password)
+
+curl -X GET -H "Content-Type: application/json" "https://${USERNAME}:${PASSWORD}@${HOST}/api/v1/user"
 
 exit 0
