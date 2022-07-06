@@ -7,7 +7,7 @@ locals {
   openshift_gitops   = local.version_re == "6" || local.version_re == "7" || local.version_re == "8" || local.version_re == "9"
   password_file      = "${local.tmp_dir}/gitea-password.val"
   openshift          = var.cluster_type != "kubernetes"
-  gitea_username     = var.username
+  gitea_username     = "gitea-admin"
   gitea_password     = var.password == "" ? random_password.password.result : var.password
   gitea_email        = "${local.gitea_username}@cloudnativetoolkit.dev"
   instance_namespace = var.instance_namespace
@@ -222,7 +222,7 @@ data external gitea_route {
 
 resource null_resource token {
   provisioner "local-exec" {
-    command = "${path.module}/scripts/generate-token.sh '${var.instance_namespace}' '${data.external.gitea_route.result.host}'"
+    command = "${path.module}/scripts/generate-token.sh '${var.instance_namespace}' 'gitea-token' '${data.external.gitea_route.result.host}'"
 
     environment = {
       KUBECONFIG = var.cluster_config_file
