@@ -220,6 +220,32 @@ data external gitea_route {
   }
 }
 
+resource null_resource token {
+  provisioner "local-exec" {
+    command = "${path.module}/scripts/generate-token.sh '${var.instance_namespace}' '${data.external.gitea_route.result.host}'"
+
+    environment = {
+      KUBECONFIG = var.cluster_config_file
+      TMP_DIR    = local.tmp_dir
+      BIN_DIR    = module.setup_clis.bin_dir
+      USERNAME   = local.gitea_username
+      PASSWORD   = data.external.gitea_route.result.password
+    }
+  }
+}
+
+data external token {
+  depends_on = [null_resource.token]
+  program = ["bash", "${path.module}/scripts/get-token.sh"]
+
+  query = {
+    bin_dir = module.setup_clis.bin_dir
+    kube_config = var.cluster_config_file
+    namespace = var.instance_namespace
+    name = "gitea-token"
+  }
+}
+
 resource "null_resource" "gitea_consolelink_deployment" {
   depends_on = [null_resource.wait_gitea_instance_deployment]
 

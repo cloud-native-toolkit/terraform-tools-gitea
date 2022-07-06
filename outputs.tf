@@ -14,6 +14,12 @@ output "password" {
   sensitive   = true
 }
 
+output "token" {
+  description = "The api token of the Gitea admin user"
+  value       = data.external.token.result.token
+  sensitive   = true
+}
+
 output "host" {
   description = "The host name of the gitea server"
   value       = data.external.gitea_route.result.host
