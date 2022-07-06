@@ -6,7 +6,7 @@ BIN_DIR=$(echo "${INPUT}" | grep "bin_dir" | sed -E 's/.*"bin_dir": ?"([^"]*)".*
 
 export PATH="${BIN_DIR}:${PATH}"
 
-export KUBECONFIG=$(echo "${INPUT}" | jq -r '.kube_confit')
+export KUBECONFIG=$(echo "${INPUT}" | jq -r '.kube_config')
 NAMESPACE=$(echo "${INPUT}" | jq -r '.namespace')
 NAME=$(echo "${INPUT}" | jq -r '.name')
 
