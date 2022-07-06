@@ -27,4 +27,9 @@ if [[ -z "${TOKEN}" ]]; then
   exit 1
 fi
 
-kubectl create secret generic "${NAME}" -n "${NAMESPACE}" --from-literal=token="${TOKEN}"
+kubectl create secret generic "${NAME}" \
+  -n "${NAMESPACE}" \
+  --from-literal=token="${TOKEN}" \
+  --dry-run=client \
+  -o yaml | \
+  kubectl apply -f -
