@@ -25,8 +25,15 @@ until kubectl get gitea -n "${NAMESPACE}" "${NAME}" 1> /dev/null 2> /dev/null &&
   sleep 30
 done
 
-if [[ $(kubectl get gitea -n "${NAMESPACE}" "${NAME}" -o json | jq -r '.spec.adminSetupComplete // false') != "true" ]]; then
+if ! kubectl get gitea -n "${NAMESPACE}" "${NAME}" 1> /dev/null 2> /dev/null; then
+  echo "Gitea cr not found" >&2
+  kubectl get gitea -n "${NAMESPACE}" >&2
+  exit 1
+fi
+
+if [[ $(kubectl get gitea -n "${NAMESPACE}" "${NAME}" -o json | jq -r '.status.adminSetupComplete // false') != "true" ]]; then
   echo "Timed out waiting for gitea admin setup to complete" >&2
+  kubectl get gitea -n "${NAMESPACE}" "${NAME}" -o yaml >&2
   exit 1
 fi
 
