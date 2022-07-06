@@ -40,6 +40,6 @@ if [[ "${count}" -eq 30 ]]; then
   exit 1
 fi
 
-PASSWORD=$(kubectl get gitea -n "${NAMESPACE}" "${NAME}" -o yaml | jq -r '.status.adminPassword')
+PASSWORD=$(kubectl get gitea -n "${NAMESPACE}" "${NAME}" -o json | jq -r '.status.adminPassword // empty')
 
 jq -n --arg HOST "${HOST}" --arg PASSWORD "${PASSWORD}" '{"host": $HOST, "password": $PASSWORD}'
