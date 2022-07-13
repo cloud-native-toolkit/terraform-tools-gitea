@@ -20,7 +20,13 @@ if ! command -v jq 1> /dev/null 2> /dev/null; then
 fi
 
 count=0
-until kubectl get gitea -n "${NAMESPACE}" "${NAME}" 1> /dev/null 2> /dev/null && [[ $(kubectl get gitea -n "${NAMESPACE}" "${NAME}" -o json | jq -r '.spec.adminSetupComplete // false') == "true" ]] || [[ $count -eq 30 ]]; do
+until kubectl get gitea -n "${NAMESPACE}" "${NAME}" 1> /dev/null 2> /dev/null && \
+  [[ $(kubectl get gitea -n "${NAMESPACE}" "${NAME}" -o json | jq -r '.status.adminSetupComplete // false') == "true" ]]
+do
+  if [[ ${count} -eq 30 ]]; then
+    break
+  fi
+
   count=$((count + 1))
   sleep 30
 done
@@ -41,9 +47,11 @@ PASSWORD=$(kubectl get gitea -n "${NAMESPACE}" "${NAME}" -o json | jq -r '.statu
 HOST=$(kubectl get gitea -n "${NAMESPACE}" "${NAME}" -o json | jq -r '.status.giteaHostname // empty')
 
 count=0
-until curl -X GET -Iqs --insecure "https://${HOST}" | grep -q -E "403|200" || \
-  [[ $count -eq 30 ]]
-do
+until [[ "$(curl -sk -X GET "https://${HOST}/api/v1/settings/api" | jq 'keys | length')" -gt 0 ]]; do
+    if [[ $count -eq 30 ]]; then
+      break
+    fi
+
     sleep 15
     count=$((count + 1))
 done
