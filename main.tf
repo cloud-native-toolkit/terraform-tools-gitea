@@ -48,7 +48,7 @@ locals {
 
 module setup_clis {
   source = "cloud-native-toolkit/clis/util"
-  version = "1.13.0"
+  version = "1.16.4"
 
   clis = ["helm", "jq", "oc", "kubectl"]
 }
