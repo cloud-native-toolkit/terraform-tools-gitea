@@ -131,7 +131,7 @@ resource "null_resource" "wait_gitea_operator_deployment" {
 
   triggers = {
     namespace  = var.operator_namespace
-    name       = local.subscription_name
+    name       = "gitea-operator"
     kubeconfig = var.cluster_config_file
     tmp_dir    = local.tmp_dir
     bin_dir    = module.setup_clis.bin_dir
