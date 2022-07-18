@@ -1,0 +1,6 @@
+dependencies:
+- name: gitea-operator
+  repository: https://charts.cloudnativetoolkit.dev
+  version: 0.1.3
+digest: sha256:df95bb2354753e382d81aedb838746e29d586dfa2c972b5d5ac846a111086184
+generated: "2022-07-17T22:28:36.856561-06:00"
