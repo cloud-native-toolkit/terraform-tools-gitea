@@ -41,7 +41,7 @@ locals {
     }
     gitea-instance = {
       giteaInstance = {
-        name               = local.instance_name
+        name               = local.base_instance_name
         namespace          = local.instance_namespace
         giteaAdminUser     = local.gitea_username
         giteaAdminPassword = local.gitea_password
