@@ -197,7 +197,7 @@ resource "null_resource" "wait_gitea_instance_deployment" {
 
   triggers = {
     namespace  = local.instance_namespace
-    name       = local.instance_name
+    name       = var.instance_name
     kubeconfig = var.cluster_config_file
     tmp_dir    = local.tmp_dir
     bin_dir    = module.setup_clis.bin_dir
