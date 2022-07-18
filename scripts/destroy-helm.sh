@@ -30,8 +30,12 @@ if ! command -v jq 1> /dev/null 2> /dev/null; then
 fi
 
 if [[ $(kubectl get "${KIND}" -n "${NAMESPACE}" -l "app.kubernetes.io/instance=${NAME}" -o JSON | jq '.items | length') -eq 0 ]]; then
-  echo "${KIND} instance not found wil instance name ${NAME}. Skipping delete"
+  echo "${KIND} instance not found with instance name ${NAME}. Skipping delete"
   exit 0
+fi
+
+if [[ "${KIND}" == "subscription" ]]; then
+  CSV_NAME=$(kubectl get "${KIND}" -n "${NAMESPACE}"  -l "app.kubernetes.io/instance=${NAME}" -o JSON | jq -r '.items[0] | .status.installedCSV')
 fi
 
 VALUES_FILE="${TMP_DIR}/${NAME}-values.yaml"
@@ -45,4 +49,8 @@ if [[ -n "${REPO}" ]]; then
 fi
 
 # ${HELM} template "${NAME}" "${CHART}" ${repo_config} --values "${VALUES_FILE}" | kubectl delete -f -
-helm template "${NAME}" "${CHART}" ${repo_config} --values "${VALUES_FILE}"
+helm template "${NAME}" "${CHART}" ${repo_config} --values "${VALUES_FILE}" | kubectl delete -f -
+
+if [[ -z "${CSV_NAME}" ]]; then
+  kubectl delete csv "${CSV_NAME}" -n "${NAMESPACE}" || echo "Error deleting csv"
+fi
