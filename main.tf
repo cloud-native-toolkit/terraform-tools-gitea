@@ -12,6 +12,7 @@ locals {
   gitea_password     = var.password == "" ? random_password.password.result : var.password
   gitea_email        = "${local.gitea_username}@cloudnativetoolkit.dev"
   instance_namespace = var.instance_namespace
+  base_instance_name = "gitea"
   instance_name      = "${var.instance_name}-${random_string.module_id.result}"
   git_protocol       = "https"
   git_name           = "Gitea"
@@ -197,7 +198,7 @@ resource "null_resource" "wait_gitea_instance_deployment" {
 
   triggers = {
     namespace  = local.instance_namespace
-    name       = var.instance_name
+    name       = local.base_instance_name
     kubeconfig = var.cluster_config_file
     tmp_dir    = local.tmp_dir
     bin_dir    = module.setup_clis.bin_dir
@@ -223,7 +224,7 @@ data external gitea_route {
     bin_dir     = module.setup_clis.bin_dir
     kube_config = var.cluster_config_file
     namespace   = local.instance_namespace
-    name        = local.instance_name
+    name        = local.base_instance_name
   }
 }
 
