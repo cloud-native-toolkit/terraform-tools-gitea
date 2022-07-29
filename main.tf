@@ -50,6 +50,8 @@ locals {
     }
   }
   gitea_instance_values_file = "${local.tmp_dir}/values-gitea-instance.yaml"
+
+  ca_cert               = var.ca_cert_file != null && var.ca_cert_file != "" ? base64encode(file(var.ca_cert_file)) : var.ca_cert
 }
 
 module setup_clis {

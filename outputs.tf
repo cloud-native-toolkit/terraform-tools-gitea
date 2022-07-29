@@ -39,3 +39,9 @@ output "ingress_url" {
   description = "The url of the gitea server"
   value       = "https://${data.external.gitea_route.result.host}"
 }
+
+output "ca_cert" {
+  value       = local.ca_cert
+  description = "Base64 encoded CA certificate for cluster endpoints"
+  depends_on = [data.external.gitea_route]
+}

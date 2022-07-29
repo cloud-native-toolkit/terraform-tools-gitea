@@ -44,3 +44,15 @@ variable "password" {
   description = "The password for the instance"
   default     = ""
 }
+
+variable "ca_cert" {
+  type        = string
+  description = "The base64 encoded ca certificate"
+  default     = ""
+}
+
+variable "ca_cert_file" {
+  type        = string
+  description = "The path to the file that contains the ca certificate"
+  default     = ""
+}

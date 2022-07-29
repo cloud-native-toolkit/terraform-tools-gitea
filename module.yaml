@@ -42,3 +42,8 @@ versions:
       moduleRef:
         id: namespace
         output: name
+    - name: ca_cert
+      moduleRef:
+        id: cluster
+        output: ca_cert
+      optional: true
