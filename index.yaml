@@ -10,6 +10,104 @@ tags:
 versions:
   - platforms:
       - ocp4
+    providers:
+      - name: clis
+        source: cloud-native-toolkit/clis
+    dependencies:
+      - id: cluster
+        refs: []
+        interface: github.com/cloud-native-toolkit/automation-modules#cluster
+      - id: olm
+        refs:
+          - source: github.com/ibm-garage-cloud/terraform-k8s-olm
+            version: '>= 1.2.2'
+      - id: namespace
+        refs:
+          - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
+            version: '>= 2.1.0'
+    variables:
+      - name: cluster_config_file
+        type: string
+        description: Cluster config file for Kubernetes cluster.
+        moduleRef:
+          id: cluster
+          output: config_file_path
+      - name: cluster_type
+        type: string
+        description: The type of cluster (openshift or kubernetes)
+        default: ocp4
+        moduleRef:
+          id: cluster
+          output: platform.type_code
+      - name: olm_namespace
+        type: string
+        description: Namespace where olm is installed
+        default: openshift-marketplace
+        moduleRef:
+          id: olm
+          output: olm_namespace
+      - name: operator_namespace
+        type: string
+        description: Namespace where operators will be installed
+        default: openshift-operators
+        moduleRef:
+          id: olm
+          output: target_namespace
+      - name: instance_namespace
+        type: string
+        description: Namespace where instance will be installed
+        default: tools
+        moduleRef:
+          id: namespace
+          output: name
+      - name: instance_name
+        type: string
+        description: The name for the instance
+        default: gitea
+      - name: username
+        type: string
+        description: The username for the instance
+        default: gitea-admin
+      - name: password
+        type: string
+        description: The password for the instance
+        default: ''
+      - name: ca_cert
+        type: string
+        description: The base64 encoded ca certificate
+        default: ''
+        moduleRef:
+          id: cluster
+          output: ca_cert
+        optional: true
+      - name: ca_cert_file
+        type: string
+        description: The path to the file that contains the ca certificate
+        default: ''
+    version: v0.5.1
+    outputs:
+      - name: namespace
+        description: The namespace where the Gitea instance has been provisioned
+      - name: username
+        description: The username of the Gitea admin user
+      - name: password
+        description: The password of the Gitea admin user
+        sensitive: true
+      - name: token
+        description: The api token of the Gitea admin user
+        sensitive: true
+      - name: host
+        description: The host name of the gitea server
+      - name: org
+        description: The host name of the gitea server
+      - name: ingress_host
+        description: The host name of the gitea server
+      - name: ingress_url
+        description: The url of the gitea server
+      - name: ca_cert
+        description: Base64 encoded CA certificate for cluster endpoints
+  - platforms:
+      - ocp4
     dependencies:
       - id: cluster
         refs: []
