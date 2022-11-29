@@ -51,6 +51,6 @@ fi
 # ${HELM} template "${NAME}" "${CHART}" ${repo_config} --values "${VALUES_FILE}" | kubectl delete -f -
 helm template "${NAME}" "${CHART}" ${repo_config} --values "${VALUES_FILE}" | kubectl delete -f -
 
-if [[ -z "${CSV_NAME}" ]]; then
+if [[ -n "${CSV_NAME}" ]]; then
   kubectl delete csv "${CSV_NAME}" -n "${NAMESPACE}" || echo "Error deleting csv"
 fi

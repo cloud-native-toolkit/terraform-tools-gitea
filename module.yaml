@@ -9,6 +9,9 @@ tags:
 versions:
 - platforms:
     - ocp4
+  providers:
+    - name: clis
+      source: cloud-native-toolkit/clis
   dependencies:
     - id: cluster
       refs: []
