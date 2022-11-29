@@ -54,9 +54,7 @@ locals {
   ca_cert               = var.ca_cert_file != null && var.ca_cert_file != "" ? base64encode(file(var.ca_cert_file)) : var.ca_cert
 }
 
-module setup_clis {
-  source = "cloud-native-toolkit/clis/util"
-
+data clis_check clis {
   clis = ["helm", "jq", "oc", "kubectl"]
 }
 
@@ -76,7 +74,7 @@ data external cluster_config {
   program = ["bash", "${path.module}/scripts/get-cluster-version.sh"]
 
   query = {
-    bin_dir     = module.setup_clis.bin_dir
+    bin_dir     = data.clis_check.clis.bin_dir
     kube_config = var.cluster_config_file
   }
 }
@@ -100,7 +98,7 @@ resource "null_resource" "gitea_operator_helm" {
     values_file_content = yamlencode(local.gitea_operator_values)
     kubeconfig          = var.cluster_config_file
     tmp_dir             = local.tmp_dir
-    bin_dir             = module.setup_clis.bin_dir
+    bin_dir             = data.clis_check.clis.bin_dir
     openshift           = local.openshift
   }
 
@@ -137,7 +135,7 @@ resource "null_resource" "wait_gitea_operator_deployment" {
     name       = "gitea-operator"
     kubeconfig = var.cluster_config_file
     tmp_dir    = local.tmp_dir
-    bin_dir    = module.setup_clis.bin_dir
+    bin_dir    = data.clis_check.clis.bin_dir
     openshift  = local.openshift
   }
 
@@ -163,7 +161,7 @@ resource "null_resource" "gitea_instance_helm" {
     values_file_content = yamlencode(local.gitea_instance_values)
     kubeconfig          = var.cluster_config_file
     tmp_dir             = local.tmp_dir
-    bin_dir             = module.setup_clis.bin_dir
+    bin_dir             = data.clis_check.clis.bin_dir
     openshift           = local.openshift
     module_id           = random_string.module_id.result
   }
@@ -203,7 +201,7 @@ resource "null_resource" "wait_gitea_instance_deployment" {
     name       = local.base_instance_name
     kubeconfig = var.cluster_config_file
     tmp_dir    = local.tmp_dir
-    bin_dir    = module.setup_clis.bin_dir
+    bin_dir    = data.clis_check.clis.bin_dir
     openshift  = local.openshift
   }
 
@@ -223,7 +221,7 @@ data external gitea_route {
   program = ["bash", "${path.module}/scripts/get-route-host.sh"]
 
   query = {
-    bin_dir     = module.setup_clis.bin_dir
+    bin_dir     = data.clis_check.clis.bin_dir
     kube_config = var.cluster_config_file
     namespace   = local.instance_namespace
     name        = local.base_instance_name
@@ -244,7 +242,7 @@ resource null_resource token {
     environment = {
       KUBECONFIG = var.cluster_config_file
       TMP_DIR    = local.tmp_dir
-      BIN_DIR    = module.setup_clis.bin_dir
+      BIN_DIR    = data.clis_check.clis.bin_dir
       USERNAME   = local.gitea_username
       PASSWORD   = data.external.gitea_route.result.password
     }
@@ -256,7 +254,7 @@ data external token {
   program = ["bash", "${path.module}/scripts/get-token.sh"]
 
   query = {
-    bin_dir = module.setup_clis.bin_dir
+    bin_dir = data.clis_check.clis.bin_dir
     kube_config = var.cluster_config_file
     namespace = var.instance_namespace
     name = "gitea-token"
@@ -274,7 +272,7 @@ resource "null_resource" "gitea_consolelink_deployment" {
     openshift    = local.openshift
     git_protocol = local.git_protocol
     git_name     = local.git_name
-    bin_dir      = module.setup_clis.bin_dir
+    bin_dir      = data.clis_check.clis.bin_dir
   }
 
   provisioner "local-exec" {
