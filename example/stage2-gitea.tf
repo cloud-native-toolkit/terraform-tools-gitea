@@ -1,10 +1,10 @@
 module "gitea" {
-  source = "./module"
+  source = "../"
 
-  cluster_config_file = module.dev_cluster.config_file_path
-  ca_cert             = module.dev_cluster.ca_cert
-  olm_namespace       = module.dev_software_olm.olm_namespace
-  operator_namespace  = module.dev_software_olm.target_namespace
+  cluster_config_file = module.cluster.config_file_path
+  ca_cert             = module.cluster.ca_cert
+  olm_namespace       = module.olm.olm_namespace
+  operator_namespace  = module.olm.target_namespace
   instance_namespace  = module.dev_tools_namespace.name
 }
 

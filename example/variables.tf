@@ -43,3 +43,9 @@ variable "ingress_subdomain" {
 variable "login_token" {
   default = ""
 }
+
+variable "region" {
+}
+
+variable "resource_group_name" {
+}
