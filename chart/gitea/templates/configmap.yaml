@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ printf "%s-module".Release.Name }}
+  name: {{ printf "%s-module" .Release.Name }}
   labels:
     {{ include "gitea.labels" . | nindent 4 }}
 data:
