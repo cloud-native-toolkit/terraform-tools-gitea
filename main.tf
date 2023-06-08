@@ -3,53 +3,53 @@ locals {
   tmp_dir            = "${path.cwd}/.tmp"
   version_file       = "${local.tmp_dir}/gitea-cluster.version"
   cluster_version    = data.external.cluster_config.result.clusterVersion
+  cluster_type       = data.external.cluster_config.result.clusterType
+  openshift          = local.cluster_type != "kubernetes"
+  instance_name      = "gitea-${random_string.module_id.result}"
+
   version_re         = substr(local.cluster_version, 0, 1) == "4" ? regex("^4.([0-9]+)", local.cluster_version)[0] : ""
   openshift_gitops   = local.version_re == "6" || local.version_re == "7" || local.version_re == "8" || local.version_re == "9"
   password_file      = "${local.tmp_dir}/gitea-password.val"
-  openshift          = var.cluster_type != "kubernetes"
   subscription_name  = "gitea-operator-${random_string.module_id.result}"
   gitea_username     = "gitea-admin"
   gitea_password     = var.password == "" ? random_password.password.result : var.password
   gitea_email        = "${local.gitea_username}@cloudnativetoolkit.dev"
   instance_namespace = var.instance_namespace
   base_instance_name = "gitea"
-  instance_name      = "${var.instance_name}-${random_string.module_id.result}"
   git_protocol       = "https"
   git_name           = "Gitea"
 
-  gitea_operator_values = {
-    global = {
-      clusterType       = var.cluster_type
-      olmNamespace      = var.olm_namespace
-      operatorNamespace = var.operator_namespace
+  gitea_values = {
+    moduleId = random_string.module_id.result
+    username = "gitea_admin"
+    password = local.gitea_password
+    route = {
+      enabled = local.openshift
     }
-
-    gitea-operator = {
-      ocpCatalog = {
-        source  = "redhat-gpte-gitea"
-        channel = "stable"
-        name    = "gitea-operator"
+    gitea = {
+      ingress = {
+        enabled = !local.openshift
+        hosts = [{
+          host = "git.${var.ingress_subdomain}"
+          paths = [{
+            path = "/"
+            pathType = "Prefix"
+          }]
+        }]
+        tls = [{
+          secretName = var.tls_secret_name
+          hosts = [
+            "git.${var.ingress_subdomain}"
+          ]
+        }]
+      }
+      gitea = {
+        admin = {
+          existingSecret = "gitea-admin"
+        }
       }
     }
   }
-  gitea_operator_values_file = "${local.tmp_dir}/values-gitea-operator.yaml"
-
-
-  gitea_instance_values = {
-    global = {
-      clusterType = var.cluster_type
-    }
-    gitea-instance = {
-      giteaInstance = {
-        name               = local.base_instance_name
-        namespace          = local.instance_namespace
-        giteaAdminUser     = local.gitea_username
-        giteaAdminPassword = local.gitea_password
-        giteaAdminEmail    = local.gitea_email
-      }
-    }
-  }
-  gitea_instance_values_file = "${local.tmp_dir}/values-gitea-instance.yaml"
 
   ca_cert               = var.ca_cert_file != null && var.ca_cert_file != "" ? base64encode(file(var.ca_cert_file)) : var.ca_cert
 }
@@ -79,95 +79,21 @@ data external cluster_config {
   }
 }
 
-resource "null_resource" "print_version" {
-  provisioner "local-exec" {
-    command = "echo 'Cluster version: ${local.version_re}'"
-  }
-
-  provisioner "local-exec" {
-    command = "echo 'OpenShift GitOps: ${local.openshift_gitops}'"
-  }
-}
-
-resource "null_resource" "gitea_operator_helm" {
-
-  triggers = {
-    namespace           = var.operator_namespace
-    name                = local.subscription_name
-    chart               = "${path.module}/chart/gitea-operator"
-    values_file_content = yamlencode(local.gitea_operator_values)
-    kubeconfig          = var.cluster_config_file
-    tmp_dir             = local.tmp_dir
-    bin_dir             = data.clis_check.clis.bin_dir
-    openshift           = local.openshift
-  }
-
-  provisioner "local-exec" {
-    command = "${path.module}/scripts/deploy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart} ${self.triggers.openshift} subscription"
-
-    environment = {
-      KUBECONFIG          = self.triggers.kubeconfig
-      VALUES_FILE_CONTENT = self.triggers.values_file_content
-      TMP_DIR             = self.triggers.tmp_dir
-      BIN_DIR             = self.triggers.bin_dir
-    }
-  }
-
-  provisioner "local-exec" {
-    when = destroy
-
-    command = "${path.module}/scripts/destroy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart} subscription"
-
-    environment = {
-      KUBECONFIG          = self.triggers.kubeconfig
-      VALUES_FILE_CONTENT = self.triggers.values_file_content
-      TMP_DIR             = self.triggers.tmp_dir
-      BIN_DIR             = self.triggers.bin_dir
-    }
-  }
-}
-
-resource "null_resource" "wait_gitea_operator_deployment" {
-  depends_on = [null_resource.gitea_operator_helm]
-
-  triggers = {
-    namespace  = var.operator_namespace
-    name       = "gitea-operator"
-    kubeconfig = var.cluster_config_file
-    tmp_dir    = local.tmp_dir
-    bin_dir    = data.clis_check.clis.bin_dir
-    openshift  = local.openshift
-  }
-
-  provisioner "local-exec" {
-    command = "${path.module}/scripts/wait-for-deployments.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.openshift}"
-
-    environment = {
-      KUBECONFIG = self.triggers.kubeconfig
-      TMP_DIR    = self.triggers.tmp_dir
-      BIN_DIR    = self.triggers.bin_dir
-    }
-  }
-
-}
-
-resource "null_resource" "gitea_instance_helm" {
-  depends_on = [null_resource.wait_gitea_operator_deployment]
+resource null_resource gitea_helm {
 
   triggers = {
     namespace           = local.instance_namespace
     name                = local.instance_name
-    chart               = "${path.module}/chart/gitea-instance"
-    values_file_content = yamlencode(local.gitea_instance_values)
+    chart               = "${path.module}/chart/gitea"
     kubeconfig          = var.cluster_config_file
     tmp_dir             = local.tmp_dir
     bin_dir             = data.clis_check.clis.bin_dir
-    openshift           = local.openshift
     module_id           = random_string.module_id.result
+    values_file_content = yamlencode(local.gitea_values)
   }
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/deploy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart} ${self.triggers.openshift} gitea"
+    command = "${path.module}/scripts/deploy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart} configmap"
 
     environment = {
       KUBECONFIG          = self.triggers.kubeconfig
@@ -181,7 +107,7 @@ resource "null_resource" "gitea_instance_helm" {
   provisioner "local-exec" {
     when = destroy
 
-    command = "${path.module}/scripts/destroy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart} gitea"
+    command = "${path.module}/scripts/destroy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart} configmap"
 
     environment = {
       KUBECONFIG          = self.triggers.kubeconfig
@@ -194,7 +120,7 @@ resource "null_resource" "gitea_instance_helm" {
 }
 
 resource "null_resource" "wait_gitea_instance_deployment" {
-  depends_on = [null_resource.gitea_instance_helm]
+  depends_on = [null_resource.gitea_helm]
 
   triggers = {
     namespace  = local.instance_namespace

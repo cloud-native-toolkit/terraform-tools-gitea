@@ -9,16 +9,16 @@ variable "cluster_type" {
   default     = "ocp4"
 }
 
-variable "olm_namespace" {
-  type        = string
-  description = "Namespace where olm is installed"
-  default     = "openshift-marketplace"
+variable "ingress_subdomain" {
+  type        = "string"
+  description = "The subdomain for ingresses created on the cluster"
+  default     = ""
 }
 
-variable "operator_namespace" {
-  type        = string
-  description = "Namespace where operators will be installed"
-  default     = "openshift-operators"
+variable "tls_secret_name" {
+  type        = "string"
+  description = "The name of the secret containing the tls information"
+  default     = ""
 }
 
 variable "instance_namespace" {

@@ -3,14 +3,7 @@
 NAMESPACE="$1"
 NAME="$2"
 CHART="$3"
-OPENSHIFT="$4"
-KIND="$5"
-
-# Don't run if on kubernetes
-if [ ${OPENSHIFT} != true ]; then
-  echo "Skip, not installing into Openshift"
-  exit 0 
-fi
+KIND="$4"
 
 if [[ -n "${BIN_DIR}" ]]; then
   export PATH="${BIN_DIR}:${PATH}"

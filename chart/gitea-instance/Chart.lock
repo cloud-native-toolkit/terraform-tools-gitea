@@ -1,6 +1,0 @@
-dependencies:
-- name: gitea-instance
-  repository: https://charts.cloudnativetoolkit.dev
-  version: 0.1.3
-digest: sha256:c85bdd7044f9fc1b18cd40db9ff3144fbaacdf1afd4635fe16ddf0e02aaa60a1
-generated: "2022-07-17T22:28:59.666991-06:00"
