@@ -10,13 +10,13 @@ variable "cluster_type" {
 }
 
 variable "ingress_subdomain" {
-  type        = "string"
+  type        = string
   description = "The subdomain for ingresses created on the cluster"
   default     = ""
 }
 
 variable "tls_secret_name" {
-  type        = "string"
+  type        = string
   description = "The name of the secret containing the tls information"
   default     = ""
 }
