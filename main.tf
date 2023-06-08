@@ -48,6 +48,11 @@ locals {
           existingSecret = "gitea-admin"
         }
       }
+      service = {
+        http = {
+          clusterIP = ""
+        }
+      }
     }
   }
 
