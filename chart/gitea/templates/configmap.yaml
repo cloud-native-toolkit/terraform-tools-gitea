@@ -5,4 +5,4 @@ metadata:
   labels:
     {{ include "gitea.labels" . | nindent 4 }}
 data:
-  moduleId: {{ .Values.moduleId }}
+  moduleId: {{ required "moduleId must be provided" .Values.moduleId | quote }}

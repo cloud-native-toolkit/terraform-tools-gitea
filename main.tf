@@ -5,7 +5,7 @@ locals {
   cluster_version    = data.external.cluster_config.result.clusterVersion
   cluster_type       = data.external.cluster_config.result.clusterType
   openshift          = local.cluster_type != "kubernetes"
-  instance_name      = "gitea-${random_string.module_id.result}"
+  instance_name      = "gitea"
 
   version_re         = substr(local.cluster_version, 0, 1) == "4" ? regex("^4.([0-9]+)", local.cluster_version)[0] : ""
   openshift_gitops   = local.version_re == "6" || local.version_re == "7" || local.version_re == "8" || local.version_re == "9"

@@ -29,28 +29,11 @@ if ! command -v jq 1> /dev/null 2> /dev/null; then
   exit 1
 fi
 
-if [[ $(kubectl get "${KIND}" -n "${NAMESPACE}" -l "app.kubernetes.io/instance=${NAME}" -o JSON | jq '.items | length') -eq 0 ]]; then
-  echo "${KIND} instance not found with instance name ${NAME}. Skipping delete"
+INSTALLED_MODULE_ID=$(kubectl get cm "${NAME}-module" -o json | jq -r '.data.moduleId // empty')
+
+if [[ "${INSTALLED_MODULE_ID}" != "${MODULE_ID}" ]]; then
+  echo "Gitea installed by a different module. Skipping"
   exit 0
 fi
 
-if [[ "${KIND}" == "subscription" ]]; then
-  CSV_NAME=$(kubectl get "${KIND}" -n "${NAMESPACE}"  -l "app.kubernetes.io/instance=${NAME}" -o JSON | jq -r '.items[0] | .status.installedCSV')
-fi
-
-VALUES_FILE="${TMP_DIR}/${NAME}-values.yaml"
-
-echo "${VALUES_FILE_CONTENT}" > "${VALUES_FILE}"
-
-kubectl config set-context --current --namespace "${NAMESPACE}"
-
-if [[ -n "${REPO}" ]]; then
-  repo_config="--repo ${REPO}"
-fi
-
-# ${HELM} template "${NAME}" "${CHART}" ${repo_config} --values "${VALUES_FILE}" | kubectl delete -f -
-helm template "${NAME}" "${CHART}" ${repo_config} --values "${VALUES_FILE}" | kubectl delete -f -
-
-if [[ -n "${CSV_NAME}" ]]; then
-  kubectl delete csv "${CSV_NAME}" -n "${NAMESPACE}" || echo "Error deleting csv"
-fi
+helm delete -n "${NAMESPACE}" "${NAME}"
