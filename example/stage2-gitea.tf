@@ -3,6 +3,8 @@ module "gitea" {
 
   cluster_config_file = module.cluster.config_file_path
   instance_namespace  = module.dev_tools_namespace.name
+  ingress_subdomain   = module.cluster.platform.ingress
+  tls_secret_name     = module.cluster.platform.tls_secret
 }
 
 resource "null_resource" "output_values" {
