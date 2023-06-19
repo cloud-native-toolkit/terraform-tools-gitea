@@ -97,7 +97,7 @@ resource null_resource gitea_helm {
     tmp_dir             = local.tmp_dir
     bin_dir             = data.clis_check.clis.bin_dir
     module_id           = random_string.module_id.result
-    values_file_content = yamlencode(local.gitea_values)
+    values_file_content = nonsensitive(yamlencode(local.gitea_values))
   }
 
   provisioner "local-exec" {

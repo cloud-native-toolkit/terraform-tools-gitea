@@ -36,6 +36,9 @@ fi
 
 VALUES_FILE="${TMP_DIR}/${NAME}-values.yaml"
 
+echo "Helm values"
+echo "${VALUES_FILE_CONTENT}"
+
 echo "${VALUES_FILE_CONTENT}" > "${VALUES_FILE}"
 
 if [[ -n "${REPO}" ]]; then
