@@ -152,10 +152,11 @@ data external gitea_route {
   program = ["bash", "${path.module}/scripts/get-route-host.sh"]
 
   query = {
-    bin_dir     = data.clis_check.clis.bin_dir
-    kube_config = var.cluster_config_file
-    namespace   = local.instance_namespace
-    name        = local.base_instance_name
+    bin_dir      = data.clis_check.clis.bin_dir
+    kube_config  = var.cluster_config_file
+    namespace    = local.instance_namespace
+    name         = local.base_instance_name
+    cluster_type = local.cluster_type
   }
 }
 
