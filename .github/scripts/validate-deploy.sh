@@ -12,7 +12,7 @@ else
 fi
 export KUBECONFIG
 
-CLUSTER_TYPE=$(cat ./terraform.tfvars | grep "cluster_type" | sed -E "s/.*=//g" | sed 's/"//g')
+CLUSTER_TYPE=$(cat .cluster_type)
 
 echo "listing directory contents"
 ls -A
