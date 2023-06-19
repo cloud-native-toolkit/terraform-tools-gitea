@@ -47,7 +47,7 @@ fi
 USERNAME=$(kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" -o json | jq -r '.data.username | @base64d')
 PASSWORD=$(kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" -o json | jq -r '.data.password | @base64d')
 
-RESOURCE_NAME=$(kubectl get "${RESOURCE}" -n "${NAMESPACE}" -l "app.kubernetes.io/instance=${NAME}" -o json | jq '.items[0] | (.kind + "/" + .metadata.name)')
+RESOURCE_NAME=$(kubectl get "${RESOURCE}" -n "${NAMESPACE}" -l "app.kubernetes.io/instance=${NAME}" -o json | jq -r '.items[0] | (.kind + "/" + .metadata.name)')
 
 HOST=$(kubectl get "${RESOURCE_NAME}" -n "${NAMESPACE}" -o json | jq -r '.spec.host // .spec.rules[0].host // empty')
 
