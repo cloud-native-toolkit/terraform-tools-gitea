@@ -20,8 +20,11 @@ locals {
   git_name           = "Gitea"
 
   gitea_values = {
+    global = {
+      clusterType = local.cluster_type
+    }
     moduleId = random_string.module_id.result
-    username = "gitea_admin"
+    username = "gitea-admin"
     password = local.gitea_password
     route = {
       enabled = local.openshift
@@ -175,7 +178,7 @@ resource null_resource token {
       KUBECONFIG = var.cluster_config_file
       TMP_DIR    = local.tmp_dir
       BIN_DIR    = data.clis_check.clis.bin_dir
-      USERNAME   = local.gitea_username
+      USERNAME   = data.external.gitea_route.result.username
       PASSWORD   = data.external.gitea_route.result.password
     }
   }

@@ -27,3 +27,6 @@ dependencies:
   - name: gitea
     version: 8.3.0
     repository: https://dl.gitea.io/charts/
+  - name: service-account
+    repository: https://charts.cloudnativetoolkit.dev
+    version: 1.2.1
