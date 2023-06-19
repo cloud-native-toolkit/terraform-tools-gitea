@@ -44,16 +44,12 @@ if [[ ${count} -eq 30 ]]; then
   exit 1
 fi
 
-RESOURCE_NAME=$(kubectl get "${RESOURCE}" -n "${NAMESPACE}" -l "app.kubernetes.io/instance=${NAME}" -o json | jq '.items[0] | .metadata.name')
-
 USERNAME=$(kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" -o json | jq -r '.data.username | @base64d')
 PASSWORD=$(kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" -o json | jq -r '.data.password | @base64d')
 
-if [[ "${RESOURCE}" == "ingress" ]]; then
-  HOST=$(kubectl get ingress "${RESOURCE_NAME}" -n "${NAMESPACE}" -o json | jq -r '.spec.rules[0].host')
-else
-  HOST=$(kubectl get route "${RESOURCE_NAME}" -n "${NAMESPACE}" -o json | jq -r '.spec.host')
-fi
+RESOURCE_NAME=$(kubectl get "${RESOURCE}" -n "${NAMESPACE}" -l "app.kubernetes.io/instance=${NAME}" -o json | jq '.items[0] | (.kind + "/" + .metadata.name)')
+
+HOST=$(kubectl get "${RESOURCE_NAME}" -n "${NAMESPACE}" -o json | jq -r '.spec.host // .spec.rules[0].host // empty')
 
 count=0
 until [[ "$(curl -sk -X GET "https://${HOST}/api/v1/settings/api" | jq 'keys | length')" -gt 0 ]]; do
