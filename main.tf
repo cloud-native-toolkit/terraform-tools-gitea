@@ -88,7 +88,6 @@ data external cluster_config {
 }
 
 resource null_resource gitea_helm {
-
   triggers = {
     namespace           = local.instance_namespace
     name                = local.instance_name
