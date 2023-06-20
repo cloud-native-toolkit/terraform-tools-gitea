@@ -1,0 +1,33 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ printf "%s-pvc-delete" .Release.Name }}
+  labels:
+    {{ include "gitea.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-delete
+    "helm.sh/hook-weight": "-7"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ printf "%s-pvc-delete" .Release.Name }}
+  labels:
+    {{ include "gitea.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-delete
+    "helm.sh/hook-weight": "-7"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ printf "%s-pvc-delete" .Release.Name }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ printf "%s-pvc-delete" .Release.Name }}
+    namespace: {{ .Release.Namespace }}
