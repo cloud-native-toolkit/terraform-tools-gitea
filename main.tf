@@ -62,6 +62,7 @@ locals {
   ca_cert               = var.ca_cert_file != null && var.ca_cert_file != "" ? base64encode(file(var.ca_cert_file)) : var.ca_cert
 }
 
+
 data clis_check clis {
   clis = ["helm", "jq", "oc", "kubectl"]
 }
