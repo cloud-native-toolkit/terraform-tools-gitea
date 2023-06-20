@@ -2,8 +2,6 @@
 
 NAMESPACE="$1"
 NAME="$2"
-CHART="$3"
-KIND="$4"
 
 if [[ -z "${TMP_DIR}" ]]; then
   TMP_DIR="./tmp"
@@ -29,7 +27,7 @@ if ! command -v jq 1> /dev/null 2> /dev/null; then
   exit 1
 fi
 
-INSTALLED_MODULE_ID=$(kubectl get cm "${NAME}-module" -o json | jq -r '.data.moduleId // empty')
+INSTALLED_MODULE_ID=$(kubectl get cm "${NAME}-module" -n "${NAMESPACE}" -o json | jq -r '.data.moduleId // empty')
 
 if [[ "${INSTALLED_MODULE_ID}" != "${MODULE_ID}" ]]; then
   echo "Gitea installed by a different module. Skipping"
