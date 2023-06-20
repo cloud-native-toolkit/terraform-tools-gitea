@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ printf "%s-pvc-delete" .Release.Name }}
+  labels:
+    {{ include "gitea.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-delete
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    spec:
+      volumes:
+        - name: scripts
+          configMap:
+            name: {{ printf "%s-pvc-cleanup" .Release.Name }}
+            defaultMode: 0777
+      containers:
+        - name: pvc-delete
+          image: {{ printf "%s:%s" (.Values.cleanupJob.image | default "quay.io/cloudnativetoolkit/console-link-cronjob") (.Values.cleanupJob.imageTag | default "v0.1.1") | quote }}
+          volumeMounts:
+            - mountPath: /scripts
+              name: scripts
+          env:
+            - name: PRESERVE_VOLUMES
+              value: {{ .Values.preserveVolumes | quote }}
+            - name: PVC_LABEL
+              value: {{ printf "app.kubernetes.io/instance=%s" .Release.Name }}
+          command: ["/scripts/cleanup.sh"]
+      serviceAccountName: {{ printf "%s-pvc-delete" .Release.Name }}
+      restartPolicy: Never
+  backoffLimit: 4

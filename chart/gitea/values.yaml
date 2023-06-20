@@ -1,0 +1,39 @@
+# Default values for gitea.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+global:
+  clusterType: ""
+
+moduleId: ""
+username: ""
+password: ""
+
+route:
+  enabled: false
+
+gitea:
+  service:
+    http:
+      clusterIP: ""
+  ingress:
+    enabled: true
+    hosts:
+      - host: git.iks-test4-2ab66b053c14936810608de9a1deac9c-0000.us-east.containers.appdomain.cloud
+        paths:
+          - path: /
+            pathType: Prefix
+        tls:
+          - secretName: iks-test4-2ab66b053c14936810608de9a1deac9c-0000
+            hosts:
+              - git.iks-test4-2ab66b053c14936810608de9a1deac9c-0000.us-east.containers.appdomain.cloud
+
+service-account:
+  name: default
+  create: false
+  sccs:
+    - anyuid
+
+preserveVolumes: true
+cleanupJob:
+  image: quay.io/cloudnativetoolkit/console-link-cronjob
+  imageTag: v0.1.1

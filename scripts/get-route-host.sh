@@ -2,11 +2,7 @@
 
 INPUT=$(tee)
 
-export KUBECONFIG=$(echo "${INPUT}" | grep "kube_config" | sed -E 's/.*"kube_config": ?"([^"]*)".*/\1/g')
 BIN_DIR=$(echo "${INPUT}" | grep "bin_dir" | sed -E 's/.*"bin_dir": ?"([^"]*)".*/\1/g')
-NAMESPACE=$(echo "${INPUT}" | grep "namespace" | sed -E 's/.*"namespace": ?"([^"]*)".*/\1/g')
-NAME=$(echo "${INPUT}" | grep "name" | sed -E 's/.*"name": ?"([^"]*)".*/\1/g')
-
 export PATH="${BIN_DIR}:${PATH}"
 
 if ! command -v kubectl 1> /dev/null 2> /dev/null; then
@@ -19,9 +15,20 @@ if ! command -v jq 1> /dev/null 2> /dev/null; then
   exit 1
 fi
 
+export KUBECONFIG=$(echo "${INPUT}" | jq -r '.kube_config')
+NAMESPACE=$(echo "${INPUT}" | jq -r '.namespace')
+NAME=$(echo "${INPUT}" | jq -r '.name')
+CLUSTER_TYPE=$(echo "${INPUT}" | jq -r '.cluster_type')
+
+SECRET_NAME="${NAME}-admin"
+
+RESOURCE="route"
+if [[ "${CLUSTER_TYPE}" == "kubernetes" ]]; then
+  RESOURCE="ingress"
+fi
+
 count=0
-until kubectl get gitea -n "${NAMESPACE}" "${NAME}" 1> /dev/null 2> /dev/null && \
-  [[ $(kubectl get gitea -n "${NAMESPACE}" "${NAME}" -o json | jq -r '.status.adminSetupComplete // false') == "true" ]]
+until [[ $(kubectl get "${RESOURCE}" -n "${NAMESPACE}" -l "app.kubernetes.io/instance=${NAME}" -o json | jq '.items | length') -gt 0 ]]
 do
   if [[ ${count} -eq 30 ]]; then
     break
@@ -31,20 +38,18 @@ do
   sleep 30
 done
 
-if ! kubectl get gitea -n "${NAMESPACE}" "${NAME}" 1> /dev/null 2> /dev/null; then
-  echo "Gitea cr not found" >&2
-  kubectl get gitea -n "${NAMESPACE}" >&2
+if [[ ${count} -eq 30 ]]; then
+  echo "Timed out waiting for ${RESOURCE} with label app.kubernetes.io/instance=${NAME} in ${NAMESPACE} namespace" >&2
+  kubectl get "${RESOURCE}" -n "${NAMESPACE}" -o yaml >&2
   exit 1
 fi
 
-if [[ $(kubectl get gitea -n "${NAMESPACE}" "${NAME}" -o json | jq -r '.status.adminSetupComplete // false') != "true" ]]; then
-  echo "Timed out waiting for gitea admin setup to complete" >&2
-  kubectl get gitea -n "${NAMESPACE}" "${NAME}" -o yaml >&2
-  exit 1
-fi
+USERNAME=$(kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" -o json | jq -r '.data.username | @base64d')
+PASSWORD=$(kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" -o json | jq -r '.data.password | @base64d')
 
-PASSWORD=$(kubectl get gitea -n "${NAMESPACE}" "${NAME}" -o json | jq -r '.status.adminPassword // empty')
-HOST=$(kubectl get gitea -n "${NAMESPACE}" "${NAME}" -o json | jq -r '.status.giteaHostname // empty')
+RESOURCE_NAME=$(kubectl get "${RESOURCE}" -n "${NAMESPACE}" -l "app.kubernetes.io/instance=${NAME}" -o json | jq -r '.items[0] | (.kind + "/" + .metadata.name)')
+
+HOST=$(kubectl get "${RESOURCE_NAME}" -n "${NAMESPACE}" -o json | jq -r '.spec.host // .spec.rules[0].host // empty')
 
 count=0
 until [[ "$(curl -sk -X GET "https://${HOST}/api/v1/settings/api" | jq 'keys | length')" -gt 0 ]]; do
@@ -61,4 +66,4 @@ if [[ "${count}" -eq 30 ]]; then
   exit 1
 fi
 
-jq -n --arg HOST "${HOST}" --arg PASSWORD "${PASSWORD}" '{"host": $HOST, "password": $PASSWORD}'
+jq -n --arg HOST "${HOST}" --arg USERNAME "${USERNAME}" --arg PASSWORD "${PASSWORD}" '{"host": $HOST, "username": $USERNAME, "password": $PASSWORD}'

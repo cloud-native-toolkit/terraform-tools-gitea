@@ -1,0 +1,9 @@
+dependencies:
+- name: gitea
+  repository: https://dl.gitea.io/charts/
+  version: 8.3.0
+- name: service-account
+  repository: https://charts.cloudnativetoolkit.dev
+  version: 1.2.1
+digest: sha256:fe326fe343d07cdc7301bcc531ed57ffda96b94db036d94274da8167406987af
+generated: "2023-06-19T14:40:59.55552-05:00"

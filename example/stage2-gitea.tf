@@ -1,11 +1,11 @@
 module "gitea" {
-  source = "./module"
+  source = "../"
 
-  cluster_config_file = module.dev_cluster.config_file_path
-  ca_cert             = module.dev_cluster.ca_cert
-  olm_namespace       = module.dev_software_olm.olm_namespace
-  operator_namespace  = module.dev_software_olm.target_namespace
+  cluster_config_file = module.cluster.config_file_path
   instance_namespace  = module.dev_tools_namespace.name
+  ingress_subdomain   = module.cluster.platform.ingress
+  tls_secret_name     = module.cluster.platform.tls_secret
+  preserve_volumes    = false
 }
 
 resource "null_resource" "output_values" {

@@ -3,6 +3,9 @@ terraform {
     clis = {
       source = "cloud-native-toolkit/clis"
     }
+    ibm = {
+      source = "ibm-cloud/ibm"
+    }
   }
 }
 

@@ -3,14 +3,7 @@
 NAMESPACE="$1"
 NAME="$2"
 CHART="$3"
-OPENSHIFT="$4"
-KIND="$5"
-
-# Don't run if on kubernetes
-if [ ${OPENSHIFT} != true ]; then
-  echo "Skip, not installing into Openshift"
-  exit 0 
-fi
+KIND="$4"
 
 if [[ -n "${BIN_DIR}" ]]; then
   export PATH="${BIN_DIR}:${PATH}"
@@ -36,21 +29,20 @@ if ! command -v jq 1> /dev/null 2> /dev/null; then
   exit 1
 fi
 
-CHART_NAME=$(basename "${CHART}")
-
-if [[ $(kubectl get "${KIND}" -n "${NAMESPACE}" -l "app.kubernetes.io/name=${CHART_NAME}" -o JSON | jq '.items | length') -gt 0 ]]; then
-  echo "Instance already exists: ${CHART_NAME}"
+if helm status "${NAME}" 1> /dev/null 2> /dev/null; then
+  echo "Gitea already installed. Skipping..."
   exit 0
 fi
 
 VALUES_FILE="${TMP_DIR}/${NAME}-values.yaml"
 
-echo "${VALUES_FILE_CONTENT}" > "${VALUES_FILE}"
+echo "Helm values"
+echo "${VALUES_FILE_CONTENT}"
 
-kubectl config set-context --current --namespace "${NAMESPACE}"
+echo "${VALUES_FILE_CONTENT}" > "${VALUES_FILE}"
 
 if [[ -n "${REPO}" ]]; then
   repo_config="--repo ${REPO}"
 fi
 
-helm template "${NAME}" "${CHART}" ${repo_config} --values "${VALUES_FILE}" | kubectl apply --validate=false -f -
+helm upgrade -i -n "${NAMESPACE}" "${NAME}" "${CHART}" ${repo_config} --values "${VALUES_FILE}"

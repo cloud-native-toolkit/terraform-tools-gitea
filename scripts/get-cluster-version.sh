@@ -17,10 +17,12 @@ if ! command -v jq 1> /dev/null 2> /dev/null; then
   exit 1
 fi
 
+CLUSTER_TYPE="kubernetes"
 if ! kubectl get clusterversion 1> /dev/null 2> /dev/null; then
   CLUSTER_VERSION=$(kubectl version  --short | grep -i server | sed -E "s/.*: +[vV]*(.*)/\1/g")
 else
+  CLUSTER_TYPE="ocp4"
   CLUSTER_VERSION=$(oc get clusterversion | grep -E "^version" | sed -E "s/version[ \t]+([0-9.]+).*/\1/g")
 fi
 
-jq -n --arg CLUSTER_VERSION "${CLUSTER_VERSION}" '{"clusterVersion": $CLUSTER_VERSION}'
+jq -n --arg CLUSTER_VERSION "${CLUSTER_VERSION}" --arg CLUSTER_TYPE "${CLUSTER_TYPE}" '{"clusterVersion": $CLUSTER_VERSION, "clusterType": $CLUSTER_TYPE}'
