@@ -32,3 +32,8 @@ service-account:
   create: false
   sccs:
     - anyuid
+
+preserveVolumes: true
+cleanupJob:
+  image: quay.io/cloudnativetoolkit/console-link-cronjob
+  imageTag: 0.1.0

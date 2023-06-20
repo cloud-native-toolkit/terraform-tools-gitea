@@ -26,6 +26,7 @@ locals {
     moduleId = random_string.module_id.result
     username = "gitea-admin"
     password = local.gitea_password
+    preserveVolumes = var.preserve_volumes
     route = {
       enabled = local.openshift
     }
@@ -61,7 +62,6 @@ locals {
 
   ca_cert               = var.ca_cert_file != null && var.ca_cert_file != "" ? base64encode(file(var.ca_cert_file)) : var.ca_cert
 }
-
 
 data clis_check clis {
   clis = ["helm", "jq", "oc", "kubectl"]

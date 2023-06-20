@@ -56,3 +56,9 @@ variable "ca_cert_file" {
   description = "The path to the file that contains the ca certificate"
   default     = ""
 }
+
+variable "preserve_volumes" {
+  type        = bool
+  description = "Flag indicating that volumes should be preserved on delete"
+  default     = true
+}
