@@ -18,7 +18,7 @@ spec:
             defaultMode: 0777
       containers:
         - name: pvc-delete
-          image: {{ printf "%s:%s" (.Values.cleanupJob.image | default "quay.io/cloudnativetoolkit/console-link-cronjob") (.Values.cleanupJob.imageTag | default "0.1.0") | quote }}
+          image: {{ printf "%s:%s" (.Values.cleanupJob.image | default "quay.io/cloudnativetoolkit/console-link-cronjob") (.Values.cleanupJob.imageTag | default "v0.1.1") | quote }}
           volumeMounts:
             - mountPath: /scripts
               name: scripts
