@@ -62,12 +62,11 @@ GIT_TOKEN=$(cat .token)
 
 export GIT_HOST GIT_USERNAME GIT_TOKEN
 
-echo "With password"
-curl -X GET -H "Content-Type: application/json" -u "${GIT_USERNAME}:${PASSWORD}" "https://${GIT_HOST}/api/v1/user/repos"
+echo "Getting repos with password"
+curl -Ls -X GET -H "Content-Type: application/json" -u "${GIT_USERNAME}:${PASSWORD}" "https://${GIT_HOST}/api/v1/user/repos"
 
-echo "With token"
-curl -X GET -H "Content-Type: application/json" -H "Authorization: token ${GIT_TOKEN}" "https://${GIT_HOST}/api/v1/user/repos"
-
+echo "Getting repos with token"
+curl -Ls -X GET -H "Content-Type: application/json" -H "Authorization: token ${GIT_TOKEN}" "https://${GIT_HOST}/api/v1/user/repos"
 
 ## Create a repo
 echo "Creating repo: test-repo"
@@ -75,7 +74,17 @@ REPO_URL=$(gitu create test-repo --output json | jq -r '.url')
 
 ## Clone the repo
 echo "Cloning repo: ${REPO_URL}"
-gitu clone "${REPO_URL}" ./test-repo --debug
+count=0
+until gitu clone "${REPO_URL}" ./test-repo --debug; do
+  if [[ $count -eq 10 ]]; then
+    echo "Timed out waiting for clone"
+    exit 1
+  fi
+
+  count=$((count + 1))
+  echo "  Error cloning repo: ${REPO_URL}. Sleeping for 30 sec"
+  sleep 30
+done
 
 ## Delete repo
 echo "Deleting repo: ${REPO_URL}"
