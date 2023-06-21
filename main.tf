@@ -33,7 +33,6 @@ locals {
     gitea = {
       ingress = {
         enabled = true  // local.openshift
-        className = "nginx"
         annotations = {
           "kubernetes.io/ingress.class" = "nginx"
         }
