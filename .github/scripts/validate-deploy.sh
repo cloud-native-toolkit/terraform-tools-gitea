@@ -63,10 +63,13 @@ GIT_TOKEN=$(cat .token)
 export GIT_HOST GIT_USERNAME GIT_TOKEN
 
 echo "Getting repos with password"
-curl -Ls -X GET -H "Content-Type: application/json" -u "${GIT_USERNAME}:${PASSWORD}" "https://${GIT_HOST}/api/v1/user/repos"
+curl -Ls -X GET -H "Content-Type: application/json" -u "${GIT_USERNAME}:${PASSWORD}" "https://${GIT_HOST}/api/v1/user/repos" || exit 1
 
 echo "Getting repos with token"
-curl -Ls -X GET -H "Content-Type: application/json" -H "Authorization: token ${GIT_TOKEN}" "https://${GIT_HOST}/api/v1/user/repos"
+curl -Ls -X GET -H "Content-Type: application/json" -H "Authorization: token ${GIT_TOKEN}" "https://${GIT_HOST}/api/v1/user/repos" || exit 1
+
+echo "Getting settings with token"
+curl -Ls -X GET -H "Content-Type: application/json" -H "Authorization: token ${GIT_TOKEN}" "https://${GIT_HOST}/api/v1/settings/api" || exit 1
 
 ## Create a repo
 GIT_REPO="test-repo"
