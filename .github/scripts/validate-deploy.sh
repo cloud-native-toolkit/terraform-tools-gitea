@@ -70,7 +70,7 @@ curl -Ls -X GET -H "Content-Type: application/json" -H "Authorization: token ${G
 
 ## Create a repo
 echo "Creating repo: test-repo"
-REPO_URL=$(gitu create test-repo --output json | jq -r '.url')
+REPO_URL=$(gitu create test-repo -g "https://${GIT_HOST}/${GIT_USERNAME}" --output json | jq -r '.url')
 
 ## Clone the repo
 echo "Cloning repo: ${REPO_URL}"
