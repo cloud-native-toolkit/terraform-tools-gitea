@@ -28,11 +28,11 @@ locals {
     password = local.gitea_password
     preserveVolumes = var.preserve_volumes
     route = {
-      enabled = local.openshift
+      enabled = false  // local.openshift
     }
     gitea = {
       ingress = {
-        enabled = !local.openshift
+        enabled = true  // local.openshift
         hosts = [{
           host = "git.${var.ingress_subdomain}"
           paths = [{
@@ -136,7 +136,7 @@ resource "null_resource" "wait_gitea_instance_deployment" {
     kubeconfig = var.cluster_config_file
     tmp_dir    = local.tmp_dir
     bin_dir    = data.clis_check.clis.bin_dir
-    openshift  = local.openshift
+    openshift  = false  // local.openshift
   }
 
   provisioner "local-exec" {
@@ -204,7 +204,7 @@ resource "null_resource" "gitea_consolelink_deployment" {
     name         = local.instance_name
     kubeconfig   = var.cluster_config_file
     tmp_dir      = local.tmp_dir
-    openshift    = local.openshift
+    openshift    = false  // local.openshift
     git_protocol = local.git_protocol
     git_name     = local.git_name
     bin_dir      = data.clis_check.clis.bin_dir
