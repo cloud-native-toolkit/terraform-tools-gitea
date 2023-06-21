@@ -69,8 +69,11 @@ echo "Getting repos with token"
 curl -Ls -X GET -H "Content-Type: application/json" -H "Authorization: token ${GIT_TOKEN}" "https://${GIT_HOST}/api/v1/user/repos"
 
 ## Create a repo
-echo "Creating repo: test-repo"
-REPO_URL=$(gitu create test-repo -g "https://${GIT_HOST}/${GIT_USERNAME}" --output json | jq -r '.url')
+GIT_REPO="test-repo"
+echo "Creating repo: ${GIT_REPO}"
+gitu create "${GIT_REPO}" -g "https://${GIT_HOST}/${GIT_USERNAME}"
+
+REPO_URL="https://${GIT_HOST}/${GIT_USERNAME}/${GIT_REPO}"
 
 ## Clone the repo
 echo "Cloning repo: ${REPO_URL}"
