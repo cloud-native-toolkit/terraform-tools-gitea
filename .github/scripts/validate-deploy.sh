@@ -55,15 +55,27 @@ if [[ "${CLUSTER_TYPE}" =~ ocp4 ]] && [[ -n "${CONSOLE_LINK_NAME}" ]]; then
   fi
 fi
 
-HOST=$(cat .host)
-USERNAME=$(cat .username)
+GIT_HOST=$(cat .host)
+GIT_USERNAME=$(cat .username)
 PASSWORD=$(cat .password)
-TOKEN=$(cat .token)
+GIT_TOKEN=$(cat .token)
+
+export GIT_HOST GIT_USERNAME GIT_TOKEN
 
 echo "With password"
-curl -X GET -H "Content-Type: application/json" -u "${USERNAME}:${PASSWORD}" "https://${HOST}/api/v1/user/repos"
+curl -X GET -H "Content-Type: application/json" -u "${GIT_USERNAME}:${PASSWORD}" "https://${GIT_HOST}/api/v1/user/repos"
 
 echo "With token"
-curl -X GET -H "Content-Type: application/json" -H "Authorization: token ${TOKEN}" "https://${HOST}/api/v1/user/repos"
+curl -X GET -H "Content-Type: application/json" -H "Authorization: token ${GIT_TOKEN}" "https://${GIT_HOST}/api/v1/user/repos"
+
+
+## Create a repo
+REPO_URL=$(gitu create test-repo --output json | jq -r '.url')
+
+## Clone the repo
+gitu clone "${REPO_URL}" ./test-repo || exit 1
+
+## Delete repo
+gitu delete "${REPO_URL}" || exit 1
 
 exit 0
