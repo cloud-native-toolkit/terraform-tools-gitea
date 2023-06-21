@@ -33,6 +33,10 @@ locals {
     gitea = {
       ingress = {
         enabled = true  // local.openshift
+        className = "nginx"
+        annotations = {
+          "kubernetes.io/ingress.class" = "nginx"
+        }
         hosts = [{
           host = "git.${var.ingress_subdomain}"
           paths = [{
