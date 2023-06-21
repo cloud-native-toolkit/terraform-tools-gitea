@@ -70,12 +70,15 @@ curl -X GET -H "Content-Type: application/json" -H "Authorization: token ${GIT_T
 
 
 ## Create a repo
+echo "Creating repo: test-repo"
 REPO_URL=$(gitu create test-repo --output json | jq -r '.url')
 
 ## Clone the repo
-gitu clone "${REPO_URL}" ./test-repo || exit 1
+echo "Cloning repo: ${REPO_URL}"
+gitu clone "${REPO_URL}" ./test-repo --debug
 
 ## Delete repo
+echo "Deleting repo: ${REPO_URL}"
 gitu delete "${REPO_URL}" || exit 1
 
 exit 0
