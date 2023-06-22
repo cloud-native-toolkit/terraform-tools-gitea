@@ -10,6 +10,7 @@ password: ""
 
 route:
   enabled: false
+  host: ""
 
 gitea:
   service:

@@ -55,15 +55,43 @@ if [[ "${CLUSTER_TYPE}" =~ ocp4 ]] && [[ -n "${CONSOLE_LINK_NAME}" ]]; then
   fi
 fi
 
-HOST=$(cat .host)
-USERNAME=$(cat .username)
+GIT_HOST=$(cat .host)
+GIT_USERNAME=$(cat .username)
 PASSWORD=$(cat .password)
-TOKEN=$(cat .token)
+GIT_TOKEN=$(cat .token)
 
-echo "With password"
-curl -X GET -H "Content-Type: application/json" -u "${USERNAME}:${PASSWORD}" "https://${HOST}/api/v1/user/repos"
+export GIT_HOST GIT_USERNAME GIT_TOKEN
 
-echo "With token"
-curl -X GET -H "Content-Type: application/json" -H "Authorization: token ${TOKEN}" "https://${HOST}/api/v1/user/repos"
+echo "Getting repos with password - https://${GIT_HOST}/api/v1/user/repos"
+curl -Ls -X GET -H "Content-Type: application/json" -u "${GIT_USERNAME}:${PASSWORD}" "https://${GIT_HOST}/api/v1/user/repos" || exit 1
+
+echo "Getting repos with token - https://${GIT_HOST}/api/v1/user/repos"
+curl -Ls -X GET -H "Content-Type: application/json" -H "Authorization: token ${GIT_TOKEN}" "https://${GIT_HOST}/api/v1/user/repos" || exit 1
+
+echo "Getting settings with token - https://${GIT_HOST}/api/v1/settings/api"
+curl -Ls -X GET -H "Content-Type: application/json" -H "Authorization: token ${GIT_TOKEN}" "https://${GIT_HOST}/api/v1/settings/api" || exit 1
+
+## Create a repo
+GIT_REPO="test-repo"
+echo "Creating repo: ${GIT_REPO}"
+REPO_URL=$(gitu create "${GIT_REPO}" --output json | jq -r '.url')
+
+## Clone the repo
+echo "Cloning repo: ${REPO_URL}"
+count=0
+until gitu clone "${REPO_URL}" ./test-repo --debug; do
+  if [[ $count -eq 10 ]]; then
+    echo "Timed out waiting for clone"
+    exit 1
+  fi
+
+  count=$((count + 1))
+  echo "  Error cloning repo: ${REPO_URL}. Sleeping for 30 sec"
+  sleep 30
+done
+
+## Delete repo
+echo "Deleting repo: ${REPO_URL}"
+gitu delete "${REPO_URL}" || exit 1
 
 exit 0
