@@ -33,7 +33,7 @@ locals {
     }
     gitea = {
       ingress = {
-        enabled = local.openshift
+        enabled = true
         hosts = [{
           host = "git.${var.ingress_subdomain}"
           paths = [{
