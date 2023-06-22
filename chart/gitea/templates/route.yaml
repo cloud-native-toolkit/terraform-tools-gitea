@@ -6,6 +6,9 @@ metadata:
   labels:
     {{- include "gitea.labels" . | nindent 4 }}
 spec:
+  {{- if .Values.route.host }}
+  host: {{ .Values.route.host }}
+  {{- end }}
   port:
     targetPort: http
   tls:

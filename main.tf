@@ -29,10 +29,11 @@ locals {
     preserveVolumes = var.preserve_volumes
     route = {
       enabled = local.openshift
+      host = "git.${var.ingress_subdomain}"
     }
     gitea = {
       ingress = {
-        enabled = true  // local.openshift
+        enabled = local.openshift
         hosts = [{
           host = "git.${var.ingress_subdomain}"
           paths = [{
