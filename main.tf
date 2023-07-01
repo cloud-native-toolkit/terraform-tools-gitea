@@ -18,6 +18,7 @@ locals {
   base_instance_name = "gitea"
   git_protocol       = "https"
   git_name           = "Gitea"
+  host               = "git-${local.instance_namespace}.${var.ingress_subdomain}"
 
   gitea_values = {
     global = {
@@ -29,13 +30,13 @@ locals {
     preserveVolumes = var.preserve_volumes
     route = {
       enabled = local.openshift
-      host = "git.${var.ingress_subdomain}"
+      host = local.host
     }
     gitea = {
       ingress = {
         enabled = true
         hosts = [{
-          host = "git.${var.ingress_subdomain}"
+          host = local.host
           paths = [{
             path = "/"
             pathType = "Prefix"
@@ -44,7 +45,7 @@ locals {
         tls = [{
           secretName = var.tls_secret_name
           hosts = [
-            "git.${var.ingress_subdomain}"
+            local.host
           ]
         }]
       }
