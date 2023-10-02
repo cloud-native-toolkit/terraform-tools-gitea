@@ -29,6 +29,14 @@ versions:
       moduleRef:
         id: cluster
         output: config_file_path
+    - name: ingress_subdomain
+      moduleRef:
+        id: cluster
+        output: platform.ingress
+    - name: tls_secret_name
+      moduleRef:
+        id: cluster
+        output: platform.tls_secret
     - name: instance_namespace
       moduleRef:
         id: namespace
